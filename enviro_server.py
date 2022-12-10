@@ -18,13 +18,15 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 from fonts.ttf import RobotoMedium as UserFont
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, fields, asdict
+import numpy as np
 import logging
 
 @dataclass
 class EnvironmentValue:
     value: float
     unit: str
+    limits: list
 
 @dataclass
 class EnvironmentData:
@@ -35,6 +37,35 @@ class EnvironmentData:
         oxidising : EnvironmentValue # Ok
         reducing : EnvironmentValue # Ok
         nh3 : EnvironmentValue # Ok
+
+        def get_dict(self):
+            return {k: str(v) for k, v in asdict(self).items()}
+            
+def read_bitmap(filename):
+    png_source = Image.open(filename)
+    png_np = np.array(png_source)
+    _, png_grayscale = np.split(png_np,2,axis=2)
+    png_grayscale = png_grayscale.reshape(-1)
+    bitmap = np.array(png_grayscale).reshape([png_np.shape[0], png_np.shape[1]])
+    bitmap = np.dot((bitmap > 128).astype(float),255)
+    return Image.fromarray(bitmap.astype(np.uint8))
+    
+def load_resources(directory):
+    bitmaps = {}
+    for filename in os.listdir(directory):
+        if(len(filename.split('-')) > 1):
+            pattern = filename.split('-')[0]
+            matched_list = []
+            for f in os.listdir(directory):
+                if(pattern in f):
+                    matched_list.append(f)
+            matched_list = sorted(matched_list)
+            bitmap_list = [read_bitmap(os.path.join(directory, file)) for file in matched_list]    
+            bitmaps[filename.split('-')[0]] = bitmap_list
+            continue
+        bitmaps[filename.split('.')[0]] = read_bitmap('resources/%s' % filename)
+    return bitmaps
+            
 
 logging.basicConfig(
     format='%(asctime)s.%(msecs)03d %(levelname)-8s %(message)s',
@@ -63,12 +94,12 @@ st7735.begin()
 
 WIDTH = st7735.width
 HEIGHT = st7735.height
-
 # Set up canvas and font
 img = Image.new('RGB', (WIDTH, HEIGHT), color=(0, 0, 0))
+icons = load_resources('resources')
 draw = ImageDraw.Draw(img)
 path = os.path.dirname(os.path.realpath(__file__))
-font_size = 11
+font_size = 9
 font = ImageFont.truetype(UserFont, font_size)
 
 message = ""
@@ -76,17 +107,47 @@ message = ""
 # The position of the top bar
 top_pos = 25
 
+values = {}
+for v in fields(EnvironmentData):
+    values[v.name] = [1] * WIDTH
 
+colors = ((20, 255, 20), (200, 200, 0), (255, 0, 0))
 # Displays data and text on the 0.96" LCD
 def display(data):
-    y = 0
+    x = 0
+    y = 2
     draw.rectangle((0, 0, WIDTH, HEIGHT), (255, 255, 255))
+    # Scale the values for the variable between 0 and 1
+    j = 0
     for field in fields(data):
+        values[field.name] = values[field.name][1:] + [getattr(data, field.name).value]
+        vmin = min(values[field.name])
+        vmax = max(values[field.name])
+        colours = [(v - vmin + 1) / (vmax - vmin + 1) for v in values[field.name]]
         name = field.name
-        print(getattr(data, field.name))
-        message = field.name + " = %.1f" %  getattr(data, field.name).value + " %s" % getattr(data, field.name).unit
-        draw.text((0, y), message, font=font, fill=(0, 0, 0))
-        y+=11
+        message = "%.1f" %  getattr(data, field.name).value + " %s" % getattr(data, field.name).unit
+        draw.text((x, y + 27), message, font=font, fill=(125, 125, 0))
+        for i in range(len(colours)):
+            line_y = HEIGHT - (top_pos + (colours[i] * (HEIGHT - top_pos))) + top_pos
+            #draw.rectangle((i, line_y, i + 1, line_y + 1), colors[j])
+        i = 0
+        for limit in getattr(data, field.name).limits:
+            if(getattr(data, field.name).value < limit):
+                break
+            i += 1
+        color = colors[i]
+        if(type(icons[field.name]) is list):
+            if(i >= len(icons[field.name])):
+                i = len(icons[field.name]) - 1
+            draw.bitmap((x,y), icons[field.name][i], fill = color)
+        else:
+            draw.bitmap((x,y), icons[field.name], fill=color)
+        if(j % 2 == 0):
+            y = 40
+        else:
+            y = 2
+        j += 1
+        x += 21
     st7735.display(img)
 
 
@@ -127,13 +188,13 @@ try:
         reducing = gas_data.reducing / 1000
         nh3 = gas_data.nh3 / 1000
         display(EnvironmentData(
-            EnvironmentValue(temperature, "C"), 
-            EnvironmentValue(pressure, "hPa"), 
-            EnvironmentValue(humidity, "%"), 
-            EnvironmentValue(illumination, "Lux"), 
-            EnvironmentValue(oxidising, "Ol"), 
-            EnvironmentValue(reducing, "Ok"), 
-            EnvironmentValue(nh3, "Ok")))
+            EnvironmentValue(temperature, "C", [27, 34]),
+            EnvironmentValue(pressure, "hPa", [970, 1030]),
+            EnvironmentValue(humidity, "%", [50, 70]),
+            EnvironmentValue(illumination, "Lux", [100, 500]),
+            EnvironmentValue(oxidising, "Ok", [20, 40]),
+            EnvironmentValue(reducing, "Ok", [700, 1000]),
+            EnvironmentValue(nh3, "Ok", [80, 120])))
 
 
 # Exit cleanly
