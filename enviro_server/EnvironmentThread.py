@@ -30,14 +30,19 @@ class EnvironmentThread(Thread):
             oxidising = gas_data.oxidising / 1000
             reducing = gas_data.reducing / 1000
             nh3 = gas_data.nh3 / 1000
-            self.__lcd.display(EnvironmentData(
+            self.__data = EnvironmentData(
                 EnvironmentValue(temperature, "C", [28, 34]),
                 EnvironmentValue(pressure, "hPa", [970, 1030]),
                 EnvironmentValue(humidity, "%", [45, 70]),
                 EnvironmentValue(illumination, "Lux", [30, 250]),
                 EnvironmentValue(oxidising, "Ok", [20, 40]),
                 EnvironmentValue(reducing, "Ok", [700, 1000]),
-                EnvironmentValue(nh3, "Ok", [80, 120])))
+                EnvironmentValue(nh3, "Ok", [80, 120])
+            )
+            self.__lcd.display(self.__data)
+
+    def get_data(self):
+        return self.__data
 
     def start(self):
         self.__is_running = True
