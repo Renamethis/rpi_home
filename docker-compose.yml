@@ -1,0 +1,63 @@
+version: "3"
+
+services:
+  python:
+    depends_on:
+      - db
+    network_mode: "service:db"
+    container_name: python
+    restart: unless-stopped
+    stdin_open: true
+    build: .
+    command: flask run --host=0.0.0.0
+    privileged: true
+    environment:
+      - FLASK_APP=rpi_home.py
+      - DEV_DATABASE_URL=postgresql://root:secret@localhost:5432/rpi
+  
+  beat:
+    build: .
+    container_name: 'celery-beat'
+    command: celery -A enviro_server.celery beat -s ./celerybeat-schedule  
+    network_mode: "service:db"
+    privileged: true
+    depends_on:
+      - redis
+    environment:
+      - FLASK_APP=rpi_home.py
+      - DEV_DATABASE_URL=postgresql://root:secret@localhost:5432/rpi
+  
+  worker:
+    build: .
+    container_name: 'celery-worker'
+    command: celery -A enviro_server.celery worker --loglevel=info
+    network_mode: "service:db"
+    privileged: true
+    depends_on:
+      - redis
+    environment:
+      - FLASK_APP=rpi_home.py
+      - DEV_DATABASE_URL=postgresql://root:secret@localhost:5432/rpi
+
+  db:
+    container_name: db
+    build:
+      context: ./enviro_server/models
+      dockerfile: ./db.Dockerfile
+    environment:
+      POSTGRES_DB: "rpi"
+      POSTGRES_USER: "root"
+      POSTGRES_PASSWORD: "secret"
+    ports:
+      - "5432:5432"
+      - "5000:5000"
+
+  redis:
+    image: redis
+    restart: always
+    container_name: 'redis'
+    command: redis-server
+    ports:
+      - 6379:6379
+    links:
+      - db
