@@ -9,6 +9,13 @@ pillow = "*"
 enviroplus = "*"
 "rpi.gpio" = "*"
 smbus = "*"
+flask = "*"
+flask-sqlalchemy = "*"
+flask-cors = "*"
+celery = "*"
+redis = "*"
+setuptools = "*"
+psycopg2 = "*"
 
 [dev-packages]
 

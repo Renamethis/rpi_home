@@ -1,1 +1,1 @@
-from enviro_server.routes import routes
+from enviro_server.routes import app
