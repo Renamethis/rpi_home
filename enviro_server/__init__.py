@@ -1,6 +1,6 @@
 from flask import Flask
 from config import config
-from enviro_server.extensions import db, celery, cors
+from .extensions import db, celery, cors
 
 # Flask factory
 def create_app(config_name):

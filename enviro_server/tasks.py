@@ -7,7 +7,6 @@ from .EnvironmentData import Units, EnvironmentData
 from .database.models import EnvironmentUnitModel
 from celery.utils.log import get_task_logger
 from .EnvironmentThread import EnvironmentInterface
-from flask import current_app
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 celery.conf.beat_schedule = {
