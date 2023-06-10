@@ -18,7 +18,7 @@ services:
   beat:
     build: .
     container_name: 'celery-beat'
-    command: celery -A enviro_server.celery beat -s ./celerybeat-schedule  
+    command: celery -A enviro_server.celery beat -s ./celerybeat-schedule
     network_mode: "service:db"
     privileged: true
     depends_on:
@@ -42,7 +42,7 @@ services:
   db:
     container_name: db
     build:
-      context: ./enviro_server/models
+      context: ./enviro_server/database
       dockerfile: ./db.Dockerfile
     environment:
       POSTGRES_DB: "rpi"
