@@ -36,8 +36,10 @@ class LCD:
         y = 2
         self.__canvas.rectangle((0, 0, self.__width, self.__height), (255, 255, 255))
         i = 0
-        for field in fields(data):
-            message = "%.1f" %  getattr(data, field.name).value + " %s" % getattr(data, field.name).unit
+        data_fields = list(fields(data))
+        del data_fields[0]
+        for field in data_fields:
+            message = "%.1f" %  getattr(data, field.name).value + " %s" % getattr(data, field.name).unit.value
             self.__canvas.text((x, y + 27), message, font=self.__font, fill=(125, 125, 0))
             j = 0
             for limit in getattr(data, field.name).limits:
