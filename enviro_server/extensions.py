@@ -2,7 +2,7 @@ import flask
 from celery import Celery
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-from enviro_server.EnvironmentThread import EnvironmentThread
+import redis
 
 # Celery class extension for Flask
 class FlaskCelery(Celery):
@@ -39,10 +39,10 @@ class FlaskCelery(Celery):
 db = SQLAlchemy()
 celery = FlaskCelery(
     'enviro_server',
-    broker="redis://redis:6379/0",
-    backend="redis://redis:6379/0",
-    include=["enviro_server.routes"]
+    broker="redis://127.0.0.1:6379/0",
+    backend="redis://127.0.0.1:6379/0",
+    include=["enviro_server.tasks"]
 )
 cors = CORS()
-enviroThread = EnvironmentThread()
-enviroThread.start()
+redis_client = redis.Redis()
+redis_client.ltrim("Data", 0, 10)

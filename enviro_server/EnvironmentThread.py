@@ -1,6 +1,6 @@
-from threading import Thread
-from .EnvironmentData import EnvironmentData, EnvironmentValue
+from .EnvironmentData import EnvironmentData, EnvironmentValue, Units
 from .LCD import LCD
+from threading import Thread
 try:
     # Transitional fix for breaking change in LTR559
     from ltr559 import LTR559
@@ -10,18 +10,21 @@ except ImportError:
 
 from bme280 import BME280
 from enviroplus import gas
+from datetime import datetime
 
-class EnvironmentThread(Thread):
+class EnvironmentInterface(Thread):
     
     FACTOR = 2.25
-    
-    def __init__(self):
+    __data = None
+
+    def __init__(self, redis_client):
         super().__init__()
         self.__bme280 = BME280()
         self.__lcd = LCD()
+        self.__client = redis_client
 
     def run(self):
-        while self.__is_running:
+        while(self.__is_running):
             temperature = self.__get_compensated_temperature() # C
             pressure = self.__bme280.get_pressure() # hPa
             humidity = self.__bme280.get_humidity() # %
@@ -30,16 +33,19 @@ class EnvironmentThread(Thread):
             oxidising = gas_data.oxidising / 1000
             reducing = gas_data.reducing / 1000
             nh3 = gas_data.nh3 / 1000
-            self.__data = EnvironmentData(
-                EnvironmentValue(temperature, "C", [28, 34]),
-                EnvironmentValue(pressure, "hPa", [970, 1030]),
-                EnvironmentValue(humidity, "%", [45, 70]),
-                EnvironmentValue(illumination, "Lux", [30, 250]),
-                EnvironmentValue(oxidising, "Ok", [20, 40]),
-                EnvironmentValue(reducing, "Ok", [700, 1000]),
-                EnvironmentValue(nh3, "Ok", [80, 120])
+            data = EnvironmentData(
+                datetime.now(),
+                EnvironmentValue(temperature, Units.TEMPERATURE, [28, 34]),
+                EnvironmentValue(pressure, Units.PRESSURE, [970, 1030]),
+                EnvironmentValue(humidity, Units.HUMIDITY, [45, 70]),
+                EnvironmentValue(illumination, Units.ILLUMINATION, [30, 250]),
+                EnvironmentValue(oxidising, Units.OXIDISING, [20, 40]),
+                EnvironmentValue(reducing, Units.REDUCING, [700, 1000]),
+                EnvironmentValue(nh3, Units.NH3, [80, 120])
             )
-            self.__lcd.display(self.__data)
+            self.__data = data
+            self.__lcd.display(data)
+            self.__client.rpush('Data', data.serialize())
 
     def get_data(self):
         return self.__data
