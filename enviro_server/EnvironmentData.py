@@ -8,15 +8,21 @@ class Units(str, Enum):
     PRESSURE = "hPa"
     HUMIDITY = "%"
     ILLUMINATION = "lux"
-    OXIDISING = "Ok"
-    REDUCING = "Ok"
-    NH3 = "Ok"
+    GAS = "Ok"
 
 @dataclass
 class EnvironmentValue:
     value: float
     unit: Units
     limits: list
+
+    @staticmethod
+    def from_dict(dictionary):
+        return EnvironmentValue(
+            value = dictionary['value'],
+            unit = Units(dictionary['unit']),
+            limits = dictionary['limits']
+        )
 
 @dataclass
 class EnvironmentData:
@@ -30,21 +36,26 @@ class EnvironmentData:
         nh3 : EnvironmentValue # Ok
 
         @staticmethod
-        def __from_dict(dict, type=None):
-            if(type is None):
-                type = EnvironmentData
+        def __from_dict(dict, itype=None):
+            if(itype is None):
+                itype = EnvironmentData
             try:
                 fieldtypes = {f.name:f.type for f in fields(EnvironmentData)}
-                return type(**{f:type.__from_dict(dict[f], fieldtypes[f]) for f in dict})
-            except Exception:
-                return dict
+                return itype(**{f:itype.__from_dict(dict[f], fieldtypes[f]) \
+                    for f in dict})
+            except Exception as e:
+                try:
+                    return datetime.strptime(dict, '%Y-%m-%d %H:%M:%S.%f')
+                except TypeError:
+                    return EnvironmentValue.from_dict(dict)
 
         @staticmethod
         def from_message(message):
             return EnvironmentData.__from_dict(loads(message))
 
         def get_dict(self):
-            return {k: str(v) for k, v in asdict(self).items()}
+            return {k: (str(v) if isinstance(v, datetime) else v) \
+                for k, v in asdict(self).items()}
 
         def serialize(self):
             return dumps(self.get_dict())

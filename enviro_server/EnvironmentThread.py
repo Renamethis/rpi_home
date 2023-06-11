@@ -39,9 +39,9 @@ class EnvironmentInterface(Thread):
                 EnvironmentValue(pressure, Units.PRESSURE, [970, 1030]),
                 EnvironmentValue(humidity, Units.HUMIDITY, [45, 70]),
                 EnvironmentValue(illumination, Units.ILLUMINATION, [30, 250]),
-                EnvironmentValue(oxidising, Units.OXIDISING, [20, 40]),
-                EnvironmentValue(reducing, Units.REDUCING, [700, 1000]),
-                EnvironmentValue(nh3, Units.NH3, [80, 120])
+                EnvironmentValue(oxidising, Units.GAS, [20, 40]),
+                EnvironmentValue(reducing, Units.GAS, [700, 1000]),
+                EnvironmentValue(nh3, Units.GAS, [80, 120])
             )
             self.__data = data
             self.__lcd.display(data)
