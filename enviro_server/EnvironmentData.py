@@ -14,7 +14,7 @@ class Units(str, Enum):
 class EnvironmentValue:
     value: float
     unit: Units
-    limits: list
+    limits: tuple
 
     @staticmethod
     def from_dict(dictionary):
@@ -43,7 +43,7 @@ class EnvironmentData:
                 fieldtypes = {f.name:f.type for f in fields(EnvironmentData)}
                 return itype(**{f:itype.__from_dict(dict[f], fieldtypes[f]) \
                     for f in dict})
-            except Exception as e:
+            except AttributeError as e:
                 try:
                     return datetime.strptime(dict, '%Y-%m-%d %H:%M:%S.%f')
                 except TypeError:
