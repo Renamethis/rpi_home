@@ -18,7 +18,7 @@ class EnvironmentDataTest(unittest.TestCase):
         )
         self.__val = EnvironmentValue(28, Units.TEMPERATURE, [28, 34])
 
-    def test_values(self):
+    def test_deserialize(self):
         self.assertEqual(self.__val, 
                          EnvironmentValue.from_dict(asdict(self.__val)))
 
