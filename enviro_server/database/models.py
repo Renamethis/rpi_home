@@ -10,6 +10,16 @@ class EnvironmentRecordModel(db.Model):
     field_name = db.Column(db.String(50), nullable=False, unique=False)
     unit = db.Column(db.String(50), db.ForeignKey('environment_units.type'), nullable=False)
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'ptime': self.ptime,
+            'value': self.value,
+            'field_name': self.field_name,
+            'unit': self.unit,
+        }
+
+
 # Environment unit model
 class EnvironmentUnitModel(db.Model):
     __tablename__ = 'environment_units'
