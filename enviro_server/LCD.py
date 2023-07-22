@@ -25,22 +25,26 @@ class LCD:
         self.__width = self.__st7735.width
         self.__height = self.__st7735.height
         # Set up drawing canvas and font
-        self.__image = Image.new('RGB', (self.__width, self.__height), color=(0, 0, 0))
+        self.__image = Image.new('RGB', (self.__width, self.__height),
+                                 color=(0, 0, 0))
         self.__icons = self.__load_resources('resources')
         self.__canvas = ImageDraw.Draw(self.__image)
         font_size = 9
         self.__font = ImageFont.truetype(UserFont, font_size)
 
     def display(self, data):
-        x = 0
+        x = 1
         y = 2
-        self.__canvas.rectangle((0, 0, self.__width, self.__height), (255, 255, 255))
+        self.__canvas.rectangle((0, 0, self.__width, self.__height),
+                                (255, 255, 255))
         i = 0
         data_fields = list(fields(data))
         del data_fields[0]
         for field in data_fields:
-            message = "%.1f" %  getattr(data, field.name).value + " %s" % getattr(data, field.name).unit.value
-            self.__canvas.text((x, y + 27), message, font=self.__font, fill=(125, 125, 0))
+            message = "%.1f" %  getattr(data, field.name).value + \
+                " %s" % getattr(data, field.name).unit.value
+            self.__canvas.text((x, y + 27), message, font=self.__font,
+                               fill=(125, 125, 0))
             j = 0
             for limit in getattr(data, field.name).limits:
                 if(getattr(data, field.name).value < limit):
@@ -50,15 +54,17 @@ class LCD:
             if(type(self.__icons[field.name]) is list):
                 if(j >= len(self.__icons[field.name])):
                     j = len(self.__icons[field.name]) - 1
-                self.__canvas.bitmap((x,y), self.__icons[field.name][j], fill=color)
+                self.__canvas.bitmap((x,y), self.__icons[field.name][j],
+                                     fill=color)
             else:
-                self.__canvas.bitmap((x,y), self.__icons[field.name], fill=color)
+                self.__canvas.bitmap((x,y), self.__icons[field.name],
+                                     fill=color)
             if(i % 2 == 0):
                 y = 40
             else:
+                x += 41
                 y = 2
             i += 1
-            x += 21
         self.__st7735.display(self.__image)
 
     def __load_resources(self, directory):
@@ -71,10 +77,12 @@ class LCD:
                     if(pattern in f):
                         matched_list.append(f)
                 matched_list = sorted(matched_list)
-                bitmap_list = [self.__read_bitmap(os.path.join(directory, file)) for file in matched_list]    
+                bitmap_list = [self.__read_bitmap(
+                    os.path.join(directory, file)) for file in matched_list]
                 bitmaps[filename.split('-')[0]] = bitmap_list
                 continue
-            bitmaps[filename.split('.')[0]] = self.__read_bitmap('resources/%s' % filename)
+            bitmaps[filename.split('.')[0]] = \
+                self.__read_bitmap('resources/%s' % filename)
         return bitmaps
 
     def __read_bitmap(self, filename):
@@ -82,6 +90,7 @@ class LCD:
         png_np = np.array(png_source)
         _, png_grayscale = np.split(png_np,2,axis=2)
         png_grayscale = png_grayscale.reshape(-1)
-        bitmap = np.array(png_grayscale).reshape([png_np.shape[0], png_np.shape[1]])
+        bitmap = np.array(png_grayscale).reshape([png_np.shape[0],
+                                                  png_np.shape[1]])
         bitmap = np.dot((bitmap > 128).astype(float),255)
         return Image.fromarray(bitmap.astype(np.uint8))
