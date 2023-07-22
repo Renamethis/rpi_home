@@ -56,3 +56,15 @@ def update_data_from_sensors():
             db.session.add(new_entry)
             current_id += 1
         db.session.commit()
+
+
+MAX_LAST_ENTRIES = 30
+
+@celery.task
+def last_entries():
+    with app.app_context():
+        last_entries = EnvironmentRecordModel.query \
+            .group_by(EnvironmentRecordModel.id.label('id'),
+                    EnvironmentRecordModel.ptime.label('ptime')) \
+            .limit(MAX_LAST_ENTRIES)
+        return [entry.to_dict() for entry in last_entries]
