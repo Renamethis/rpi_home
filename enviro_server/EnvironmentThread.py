@@ -8,6 +8,7 @@ try:
 except ImportError:
     import ltr559
 
+from pms5003 import PMS5003, ReadTimeoutError as pmsReadTimeoutError
 from bme280 import BME280
 from enviroplus import gas
 from datetime import datetime
@@ -20,6 +21,7 @@ class EnvironmentInterface(Thread):
     def __init__(self, redis_client):
         super().__init__()
         self.__bme280 = BME280()
+        self.__pms5003 = PMS5003()
         self.__lcd = LCD()
         self.__client = redis_client
 
@@ -29,19 +31,21 @@ class EnvironmentInterface(Thread):
             pressure = self.__bme280.get_pressure() # hPa
             humidity = self.__bme280.get_humidity() # %
             illumination = ltr559.get_lux() # lux
+            dust = float(self.__pms5003.read().pm_ug_per_m3(2.5)) # ug/m3
             gas_data = gas.read_all() # Ok
             oxidising = gas_data.oxidising / 1000
             reducing = gas_data.reducing / 1000
             nh3 = gas_data.nh3 / 1000
             data = EnvironmentData(
                 datetime.now(),
-                EnvironmentValue(temperature, Units.TEMPERATURE, [28, 34]),
-                EnvironmentValue(pressure, Units.PRESSURE, [970, 1030]),
-                EnvironmentValue(humidity, Units.HUMIDITY, [45, 70]),
-                EnvironmentValue(illumination, Units.ILLUMINATION, [30, 250]),
-                EnvironmentValue(oxidising, Units.GAS, [20, 40]),
-                EnvironmentValue(reducing, Units.GAS, [700, 1000]),
-                EnvironmentValue(nh3, Units.GAS, [80, 120])
+                EnvironmentValue(temperature, Units.TEMPERATURE, (28, 34)),
+                EnvironmentValue(pressure, Units.PRESSURE, (970, 1030)),
+                EnvironmentValue(humidity, Units.HUMIDITY, (45, 70)),
+                EnvironmentValue(illumination, Units.ILLUMINATION, (30, 250)),
+                EnvironmentValue(dust, Units.DUST, (30, 100)),
+                EnvironmentValue(oxidising, Units.GAS, (40, 60)),
+                EnvironmentValue(reducing, Units.GAS, (700, 1000)),
+                EnvironmentValue(nh3, Units.GAS, (120, 200))
             )
             self.__data = data
             self.__lcd.display(data)

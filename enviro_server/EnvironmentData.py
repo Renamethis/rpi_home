@@ -8,6 +8,7 @@ class Units(str, Enum):
     PRESSURE = "hPa"
     HUMIDITY = "%"
     ILLUMINATION = "lux"
+    DUST = "ug/m3"
     GAS = "Ok"
 
 @dataclass
@@ -31,6 +32,7 @@ class EnvironmentData:
         pressure : EnvironmentValue # hPa
         humidity : EnvironmentValue # %
         illumination : EnvironmentValue # lux
+        dust : EnvironmentValue # ug/m3
         oxidising : EnvironmentValue # Ok
         reducing : EnvironmentValue # Ok
         nh3 : EnvironmentValue # Ok
