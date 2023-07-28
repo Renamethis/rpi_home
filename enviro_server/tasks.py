@@ -64,7 +64,8 @@ MAX_LAST_ENTRIES = 30
 def last_entries():
     with app.app_context():
         last_entries = EnvironmentRecordModel.query \
-            .group_by(EnvironmentRecordModel.id.label('id'),
-                    EnvironmentRecordModel.ptime.label('ptime')) \
+            .order_by(EnvironmentRecordModel.id.desc()) \
+            .group_by(EnvironmentRecordModel.id,
+                      EnvironmentRecordModel.ptime) \
             .limit(MAX_LAST_ENTRIES)
         return [entry.to_dict() for entry in last_entries]
