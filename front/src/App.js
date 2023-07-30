@@ -4,13 +4,12 @@ import Axios from "axios";
 import WeatherComponent from "./WeatherInfoComponent";
 
 export const WeatherIcons = {
-  "01d": "./icons/sunny.svg",
+  "01d": "./icons/perfect-day.svg",
   "01n": "./icons/night.svg",
-  "02d": "./icons/day.svg",
-  "02n": "./icons/cloudy-night.svg",
+  "02d": "./icons/sunny.svg",
+  "02n": "./icons/night.svg",
   "03d": "./icons/cloudy.svg",
-  "03n": "./icons/cloudy.svg",
-  "04d": "./icons/perfect-day.svg",
+  "03n": "./icons/cloudy-night.svg",
   "04n": "./icons/cloudy-night.svg",
   "09d": "./icons/rain.svg",
   "09n": "./icons/rain-night.svg",
@@ -52,17 +51,15 @@ function App() {
   useEffect(() => {
     const fetchWeather = async () => {
       const response = await Axios.get(
-        'http://127.0.0.1:5000/get_last_entries',
+        process.env.REACT_APP_BASE_URL + "/get_current_indicators",
       );
-      let result = Object.fromEntries(response.data.slice(0,8).map(x => [x.field_name, x]));
-      console.log(result)
-      updateWeather(result);
+      updateWeather(response.data);
     };
     fetchWeather();
   }, [])
   return (
     <Container>
-      <AppLabel>React Weather App</AppLabel>
+      <AppLabel>Environment Weather App</AppLabel>
       {weather ? (
         <WeatherComponent weather={weather} city="Moscow" />
       ) : (

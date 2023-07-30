@@ -6,8 +6,11 @@ export const WeatherInfoIcons = {
     sunset: "./icons/temp.svg",
     sunrise: "./icons/temp.svg",
     humidity: "./icons/humidity.svg",
-    wind: "./icons/wind.svg",
+    dust: "./icons/dust.svg",
     pressure: "./icons/pressure.svg",
+    nh3: "./icons/nh3.png",
+    oxidising: "./icons/oxidising.png",
+    reducing: "./icons/reducing.png"
 };
 const Location = styled.span`
   margin: 15px auto;
@@ -77,11 +80,12 @@ const InfoLabel = styled.span`
 
 const WeatherInfoComponent = (props) => {
     const {name, value} = props;
+    const color = (value.value > value.limits[0] && value.value < value.limits[1]) ? 'green' : (value.value > value.limits[1]) ? 'red' : 'black';
     return (
         <InfoContainer>
             <InfoIcon src={WeatherInfoIcons[name]}/>
-            <InfoLabel>
-                {value}
+            <InfoLabel style={{ color: color }}>
+                {Math.round(value.value) + " " + value.unit}
                 <span>{name}</span>
             </InfoLabel>
         </InfoContainer>
@@ -90,28 +94,30 @@ const WeatherInfoComponent = (props) => {
 const WeatherComponent = (props) => {
     const {weather} = props;
     const d = new Date(weather.datetime);
-    const isDay = d.getHours() > 9 && d.getHours() < 17 
-    const getTime = (timeStamp) => {
-        return `${new Date(timeStamp * 1000).getHours()} : ${new Date(timeStamp * 1000).getMinutes()}`
-    }
+    const isDay = (d.getHours() > 9 && d.getHours() < 17) ? "d": "n";
+    const rain_factor = Math.round(11*((weather?.pressure.value)/1500)*(weather?.humidity.value/100));
+    const normalized_factor = (rain_factor > 4 && rain_factor < 9) ? 4: rain_factor;
+    const icon = (normalized_factor >= 10) ? normalized_factor + isDay : "0" + normalized_factor + isDay;
     return (
         <>
             <WeatherContainer>
                 <Condition>
-                    <span>{`${Math.floor(weather?.main?.temp - 273)}°C`}</span>
-                    {`  |  ${weather.temperature.value}`}
+                    <span>{`${Math.floor(weather?.temperature.value)}°C`}</span>
                 </Condition>
-                <WeatherIcon src={WeatherIcons["01d"]}/>
+                <WeatherIcon src={WeatherIcons[icon]}/>
             </WeatherContainer>
-            <Location>{`${weather?.nh3.value}, Moscow`}</Location>
+            <Location>{`Moscow`}</Location>
 
             <WeatherInfoLabel>Weather Info</WeatherInfoLabel>
             <WeatherInfoContainer>
-                <WeatherInfoComponent name={isDay ? "sunset" : "sunrise"}
-                                      value={`${weather.datetime}`}/>
-                <WeatherInfoComponent name={"humidity"} value={weather?.humidity?.value}/>
-                <WeatherInfoComponent name={"dust"} value={weather?.dust?.value}/>
-                <WeatherInfoComponent name={"pressure"} value={weather?.pressure?.value}/>
+                <WeatherInfoComponent name={isDay == "d" ? "sunset" : "sunrise"}
+                                      value={weather?.illumination}/>
+                <WeatherInfoComponent name={"humidity"} value={weather?.humidity}/>
+                <WeatherInfoComponent name={"dust"} value={weather?.dust}/>
+                <WeatherInfoComponent name={"pressure"} value={weather?.pressure}/>
+                <WeatherInfoComponent name={"nh3"} value={weather?.nh3}/>
+                <WeatherInfoComponent name={"oxidising"} value={weather?.oxidising}/>
+                <WeatherInfoComponent name={"reducing"} value={weather?.reducing}/>
             </WeatherInfoContainer>
         </>
     );
