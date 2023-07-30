@@ -3,6 +3,8 @@ from enum import Enum
 from json import dumps, loads
 from datetime import datetime
 
+CHANNELS = 8
+
 class Units(str, Enum):
     TEMPERATURE = "C"
     PRESSURE = "hPa"

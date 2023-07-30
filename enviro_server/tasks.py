@@ -3,7 +3,7 @@ from . import create_app
 from celery.signals import task_prerun
 import os
 from celery.signals import worker_ready
-from .EnvironmentData import Units, EnvironmentData
+from .EnvironmentData import Units, EnvironmentData, CHANNELS
 from .database.models import EnvironmentUnitModel, EnvironmentRecordModel
 from celery.utils.log import get_task_logger
 from .EnvironmentThread import EnvironmentInterface
@@ -58,7 +58,14 @@ def update_data_from_sensors():
         db.session.commit()
 
 
-MAX_LAST_ENTRIES = 30
+MAX_LAST_ENTRIES = CHANNELS * 3
+
+@celery.task
+def current_state():
+    with app.app_context():
+        return EnvironmentData.from_message(redis_client.lrange('Data', -1, -1)[0]).get_dict()
+
+
 
 @celery.task
 def last_entries():
@@ -68,4 +75,8 @@ def last_entries():
             .group_by(EnvironmentRecordModel.id,
                       EnvironmentRecordModel.ptime) \
             .limit(MAX_LAST_ENTRIES)
-        return [entry.to_dict() for entry in last_entries]
+        return [{entry.field_name: \
+                    {key: value for key, value in entry.to_dict().items() \
+                        if key != "field_name"} \
+                for entry in last_entries[i*8:i*8 + 8]} \
+                    for i in range(0, int(MAX_LAST_ENTRIES/CHANNELS))]
