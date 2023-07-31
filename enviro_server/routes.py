@@ -5,13 +5,12 @@ from enviro_server.database.models import EnvironmentRecordModel, EnvironmentUni
 from flask_cors import cross_origin
 
 ENVIRONMENT_VARIABLES = 8
-MAX_LAST_ENTRIES = ENVIRONMENT_VARIABLES*3
 
 # Read last 30 entries of EnvrionmentRecord from database
-@app.route("/get_last_entries", methods=["GET"])
+@app.route("/get_last_entries/<amount>", methods=["GET"])
 @cross_origin(origin='*')
-def get_last_entries():
-    return last_entries.delay().get(), 200
+def get_last_entries(amount):
+    return last_entries.delay([int(amount) * ENVIRONMENT_VARIABLES,]).get(), 200
 
 @app.route("/get_current_indicators", methods=["GET"])
 @cross_origin(origin='*')

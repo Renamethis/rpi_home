@@ -68,7 +68,7 @@ def current_state():
 
 
 @celery.task
-def last_entries():
+def last_entries(args):
     with app.app_context():
         last_entries = EnvironmentRecordModel.query \
             .order_by(EnvironmentRecordModel.id.desc()) \
@@ -79,4 +79,4 @@ def last_entries():
                     {key: value for key, value in entry.to_dict().items() \
                         if key != "field_name"} \
                 for entry in last_entries[i*8:i*8 + 8]} \
-                    for i in range(0, int(MAX_LAST_ENTRIES/CHANNELS))]
+                    for i in range(0, args[0])]
