@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import {WeatherIcons} from "./App";
+import {WeatherIcons} from "./App.js";
 
 export const WeatherInfoIcons = {
     sunset: "./icons/temp.svg",

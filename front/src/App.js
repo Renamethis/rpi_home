@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import Axios from "axios";
 import WeatherComponent from "./WeatherInfoComponent";
+import ConnectedScatterplot from './D3Component.tsx';
 
 export const WeatherIcons = {
   "01d": "./icons/perfect-day.svg",
@@ -46,25 +47,29 @@ const CloseButton = styled.span`
   position: absolute;
 `;
 
+const QUERY_SIZE = 5;
 function App() {
-  const [weather, updateWeather] = useState();
+  const [weather, updateWeather] = useState([]);
   useEffect(() => {
     const fetchWeather = async () => {
       const response = await Axios.get(
-        process.env.REACT_APP_BASE_URL + "/get_current_indicators",
+        process.env.REACT_APP_BASE_URL + "/get_last_entries/5",
       );
-      updateWeather(response.data);
+      let result = [];
+      for(const [key, value] of response.data.entries()) {
+        result.push({
+          x: key,
+          y: value.temperature.value, // Temp
+        });
+      }
+      updateWeather(result);
     };
     fetchWeather();
   }, [])
   return (
     <Container>
       <AppLabel>Environment Weather App</AppLabel>
-      {weather ? (
-        <WeatherComponent weather={weather} city="Moscow" />
-      ) : (
-        <p> TEST </p>
-      )}
+      <ConnectedScatterplot data={weather} width="400" height="500"></ConnectedScatterplot>
     </Container>
   );
 }
