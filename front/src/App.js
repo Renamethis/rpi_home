@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import Axios from "axios";
 import WeatherComponent from "./WeatherInfoComponent";
-import ConnectedScatterplot from './D3Component.tsx';
+//import ConnectedScatterplot from './D3Component.tsx';
+import { LineChartTransition } from "./LineChartTransition.tsx";
 
 export const WeatherIcons = {
   "01d": "./icons/perfect-day.svg",
@@ -53,25 +54,31 @@ function App() {
   useEffect(() => {
     const fetchWeather = async () => {
       const response = await Axios.get(
-        process.env.REACT_APP_BASE_URL + "/get_last_entries/5",
+        process.env.REACT_APP_BASE_URL + "/get_last_entries/" + QUERY_SIZE,
       );
       let result = [];
       for(const [key, value] of response.data.entries()) {
-        result.push({
+        let entry = {
           x: key,
-          y: value.temperature.value, // Temp
-        });
+        };
+        for(const key of Object.keys(value)) {
+          entry[key] = value[key].value
+        }
+        result.push(entry);
       }
       updateWeather(result);
     };
     fetchWeather();
   }, [])
-  return (
-    <Container>
-      <AppLabel>Environment Weather App</AppLabel>
-      <ConnectedScatterplot data={weather} width="400" height="500"></ConnectedScatterplot>
-    </Container>
-  );
+  if(weather.length > 0) {
+    return (
+      <Container>
+        <AppLabel>Environment Weather App</AppLabel>
+        <LineChartTransition data={weather} width="400" height="500" />
+      </Container>
+    );
+  }
+  return <Container></Container>
 }
 
 export default App;
