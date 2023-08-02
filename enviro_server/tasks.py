@@ -7,6 +7,7 @@ from .EnvironmentData import Units, EnvironmentData, CHANNELS
 from .database.models import EnvironmentUnitModel, EnvironmentRecordModel
 from celery.utils.log import get_task_logger
 from .EnvironmentThread import EnvironmentInterface
+from datetime import datetime
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 celery.conf.beat_schedule = {
@@ -61,6 +62,13 @@ def update_data_from_sensors():
 MAX_LAST_ENTRIES = CHANNELS * 3
 
 @celery.task
+def by_date(args):
+    with app.app_context():
+        sorted_by_date =  EnvironmentRecordModel.query.filter_by(ptime=args[0])
+        return __transform_data(sorted_by_date, 1)[0]
+
+
+@celery.task
 def current_state():
     with app.app_context():
         return EnvironmentData.from_message(redis_client.lrange('Data', -1, -1)[0]).get_dict()
@@ -75,8 +83,18 @@ def last_entries(args):
             .group_by(EnvironmentRecordModel.id,
                       EnvironmentRecordModel.ptime) \
             .limit(MAX_LAST_ENTRIES)
-        return [{entry.field_name: \
-                    {key: value for key, value in entry.to_dict().items() \
-                        if key != "field_name"} \
-                for entry in last_entries[i*8:i*8 + 8]} \
-                    for i in range(0, args[0])]
+        return __transform_data(last_entries, args[0])
+
+def __transform_data(entries, amount):
+        timebuf = list([str(entries[i*8].ptime) for i in range(0, amount)]) # TODO: Simplify
+        result = [{entry.field_name: \
+                {key: value for key, value in entry.to_dict().items() \
+                    if key != "field_name" and key != "ptime"} \
+            for entry in entries[i*8:i*8 + 8]} \
+                for i in range(0, amount)]
+        cnt = 0
+        for entry in result:
+            entry['datetime'] = timebuf[cnt]
+            # entry['limits'] = Units(entry['unit']) TODO: Add limits
+            cnt += 1
+        return result
