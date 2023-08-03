@@ -3,7 +3,7 @@ from . import create_app
 from celery.signals import task_prerun
 import os
 from celery.signals import worker_ready
-from .EnvironmentData import Units, EnvironmentData, CHANNELS
+from .EnvironmentData import Units, EnvironmentData, CHANNELS, Limits
 from .database.models import EnvironmentUnitModel, EnvironmentRecordModel
 from celery.utils.log import get_task_logger
 from .EnvironmentThread import EnvironmentInterface
@@ -13,7 +13,7 @@ app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 celery.conf.beat_schedule = {
     'update_task': {
         'task': 'enviro_server.tasks.update_data_from_sensors',
-        'schedule': 10.0,
+        'schedule': 30.0,
     },
 }
 celery.conf.timezone = 'UTC'
@@ -74,14 +74,11 @@ def current_state():
         return EnvironmentData.from_message(redis_client.lrange('Data', -1, -1)[0]).get_dict()
 
 
-
 @celery.task
 def last_entries(args):
     with app.app_context():
         last_entries = EnvironmentRecordModel.query \
-            .order_by(EnvironmentRecordModel.id.desc()) \
-            .group_by(EnvironmentRecordModel.id,
-                      EnvironmentRecordModel.ptime) \
+            .order_by(EnvironmentRecordModel.ptime.desc()) \
             .limit(MAX_LAST_ENTRIES)
         return __transform_data(last_entries, args[0])
 
@@ -94,7 +91,10 @@ def __transform_data(entries, amount):
                 for i in range(0, amount)]
         cnt = 0
         for entry in result:
+            for key in entry:
+                entry[key]['limits'] = Limits[key]
+                entry[key]['unit'] = Units[entry[key]['unit'].upper()]
             entry['datetime'] = timebuf[cnt]
-            # entry['limits'] = Units(entry['unit']) TODO: Add limits
             cnt += 1
+        result.reverse()
         return result
