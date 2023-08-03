@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import Axios from "axios";
 import WeatherComponent from "./WeatherInfoComponent";
 //import ConnectedScatterplot from './D3Component.tsx';
-import { LineChartTransition } from "./LineChartTransition.tsx";
-
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { MainPage } from './MainPage.js'
+import './App.css'
 export const WeatherIcons = {
   "01d": "./icons/perfect-day.svg",
   "01n": "./icons/night.svg",
@@ -25,7 +24,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 380px;
+  width: 100%;
   padding: 20px 10px;
   margin: auto;
   border-radius: 4px;
@@ -48,37 +47,18 @@ const CloseButton = styled.span`
   position: absolute;
 `;
 
-const QUERY_SIZE = 5;
 function App() {
-  const [weather, updateWeather] = useState([]);
-  useEffect(() => {
-    const fetchWeather = async () => {
-      const response = await Axios.get(
-        process.env.REACT_APP_BASE_URL + "/get_last_entries/" + QUERY_SIZE,
-      );
-      let result = [];
-      for(const [key, value] of response.data.entries()) {
-        let entry = {
-          x: key,
-        };
-        for(const key of Object.keys(value)) {
-          entry[key] = value[key].value
-        }
-        result.push(entry);
-      }
-      updateWeather(result);
-    };
-    fetchWeather();
-  }, [])
-  if(weather.length > 0) {
     return (
       <Container>
         <AppLabel>Environment Weather App</AppLabel>
-        <LineChartTransition data={weather} width="400" height="500" />
+        <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<MainPage/>} />
+              <Route path="/weather" element={<WeatherComponent/>} />
+            </Routes>
+        </BrowserRouter>
       </Container>
     );
-  }
-  return <Container></Container>
 }
 
 export default App;
