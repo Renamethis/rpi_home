@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { LineChart } from "./LineChart.tsx";
+import { useNavigate } from 'react-router-dom';
 import * as d3 from "d3";
+
 const BUTTONS_HEIGHT = 50;
 
 type LineChartDatasetTransitionProps = {
@@ -20,19 +22,29 @@ const buttonStyle = {
 };
 
 export const LineChartTransition = ({
+  entries,
   data,
   width,
   height,
 }: LineChartDatasetTransitionProps) => {
+  const axesRef = useRef(null);
+  const navigate = useNavigate();
   const [selectedGroup, setSelectedGroup] = useState<"temperature" | "pressure" | "humidity" | "illumination" | "dust" | "oxidising" | "reducing" | "nh3">(
     "temperature"
   );
   const handleVariableSwitch = (event) => {
     setSelectedGroup(event.target.value);
   };
+  const currentStateHandle = () => {
+    navigate("weather")
+  }
   return (
     <div>
-      <div style={{ height: BUTTONS_HEIGHT }}>
+      <div style={{ 
+                height: BUTTONS_HEIGHT,
+                justifyContent: "space-between",
+                alignItems: "space-between",
+        }}>
         <select onChange={handleVariableSwitch}>
             <option value="temperature">Temperature</option>
             <option value="pressure">Pressure</option>
@@ -43,8 +55,11 @@ export const LineChartTransition = ({
             <option value="reducing">Reducing</option>
             <option value="nh3">NH3</option>
         </select>
+        <button onClick={currentStateHandle}>Current State</button>
       </div>
       <LineChart
+        axesRef={axesRef}
+        entries={entries}
         width={width}
         height={height - BUTTONS_HEIGHT}
         data={data}
