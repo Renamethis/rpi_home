@@ -1,4 +1,4 @@
-from .EnvironmentData import EnvironmentData, EnvironmentValue, Units
+from .EnvironmentData import EnvironmentData, EnvironmentValue, Units, Limits
 from .LCD import LCD
 from threading import Thread
 try:
@@ -38,14 +38,14 @@ class EnvironmentInterface(Thread):
             nh3 = gas_data.nh3 / 1000
             data = EnvironmentData(
                 datetime.now(),
-                EnvironmentValue(temperature, Units.TEMPERATURE, (28, 34)),
-                EnvironmentValue(pressure, Units.PRESSURE, (970, 1030)),
-                EnvironmentValue(humidity, Units.HUMIDITY, (45, 70)),
-                EnvironmentValue(illumination, Units.ILLUMINATION, (30, 250)),
-                EnvironmentValue(dust, Units.DUST, (30, 100)),
-                EnvironmentValue(oxidising, Units.GAS, (40, 60)),
-                EnvironmentValue(reducing, Units.GAS, (700, 1000)),
-                EnvironmentValue(nh3, Units.GAS, (120, 200))
+                EnvironmentValue(temperature, Units.TEMPERATURE, Limits["temperature"]),
+                EnvironmentValue(pressure, Units.PRESSURE, Limits["pressure"]),
+                EnvironmentValue(humidity, Units.HUMIDITY, Limits["humidity"]),
+                EnvironmentValue(illumination, Units.ILLUMINATION, Limits["illumination"]),
+                EnvironmentValue(dust, Units.DUST, Limits["dust"]),
+                EnvironmentValue(oxidising, Units.GAS, Limits["oxidising"]),
+                EnvironmentValue(reducing, Units.GAS, Limits["reducing"]),
+                EnvironmentValue(nh3, Units.GAS, Limits["nh3"])
             )
             self.__data = data
             self.__lcd.display(data)

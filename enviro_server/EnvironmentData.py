@@ -13,6 +13,17 @@ class Units(str, Enum):
     DUST = "ug/m3"
     GAS = "Ok"
 
+Limits = {
+    "temperature" : (28, 34),
+    "pressure" : (970, 1030),
+    "humidity" : (45, 70),
+    "illumination" : (30, 250),
+    "dust" : (30, 100),
+    "oxidising" : (40, 60),
+    "reducing" : (700, 1000),
+    "nh3" : (120, 200),
+}
+
 @dataclass
 class EnvironmentValue:
     value: float
