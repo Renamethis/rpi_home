@@ -1,6 +1,9 @@
 import React from "react";
 import styled from "styled-components";
 import {WeatherIcons} from "./App.js";
+import {useLocation} from 'react-router-dom';
+import { useEffect, useState } from "react";
+import Axios from "axios";
 
 export const WeatherInfoIcons = {
     sunset: "./icons/temp.svg",
@@ -91,36 +94,66 @@ const WeatherInfoComponent = (props) => {
         </InfoContainer>
     );
 };
-const WeatherComponent = (props) => {
-    const {weather} = props;
-    const d = new Date(weather.datetime);
-    const isDay = (d.getHours() > 9 && d.getHours() < 17) ? "d": "n";
-    const rain_factor = Math.round(11*((weather?.pressure.value)/1500)*(weather?.humidity.value/100));
-    const normalized_factor = (rain_factor > 4 && rain_factor < 9) ? 4: rain_factor;
-    const icon = (normalized_factor >= 10) ? normalized_factor + isDay : "0" + normalized_factor + isDay;
-    return (
-        <>
-            <WeatherContainer>
-                <Condition>
-                    <span>{`${Math.floor(weather?.temperature.value)}°C`}</span>
-                </Condition>
-                <WeatherIcon src={WeatherIcons[icon]}/>
-            </WeatherContainer>
-            <Location>{`Moscow`}</Location>
 
-            <WeatherInfoLabel>Weather Info</WeatherInfoLabel>
-            <WeatherInfoContainer>
-                <WeatherInfoComponent name={isDay == "d" ? "sunset" : "sunrise"}
-                                      value={weather?.illumination}/>
-                <WeatherInfoComponent name={"humidity"} value={weather?.humidity}/>
-                <WeatherInfoComponent name={"dust"} value={weather?.dust}/>
-                <WeatherInfoComponent name={"pressure"} value={weather?.pressure}/>
-                <WeatherInfoComponent name={"nh3"} value={weather?.nh3}/>
-                <WeatherInfoComponent name={"oxidising"} value={weather?.oxidising}/>
-                <WeatherInfoComponent name={"reducing"} value={weather?.reducing}/>
-            </WeatherInfoContainer>
-        </>
-    );
+const WeatherCard = ({weather}) => {
+  const d = new Date(weather.datetime);
+  const isDay = (d.getHours() > 9 && d.getHours() < 17) ? "d": "n";
+  const rain_factor = Math.round(11*((weather?.pressure.value)/1500)*(weather?.humidity.value/100));
+  const normalized_factor = (rain_factor > 4 && rain_factor < 9) ? 4: rain_factor;
+  const result_factor = Math.min(11, normalized_factor)
+  const icon = (result_factor >= 10) ? result_factor + isDay : "0" + result_factor + isDay;
+  return (
+      <>
+          <WeatherContainer>
+              <Condition>
+                  <span>{`${Math.floor(weather?.temperature.value)}°C`}</span>
+              </Condition>
+              <WeatherIcon src={WeatherIcons[icon]}/>
+          </WeatherContainer>
+          <Location>{`Moscow`}</Location>
+
+          <WeatherInfoLabel>Weather Info</WeatherInfoLabel>
+          <WeatherInfoContainer>
+              <WeatherInfoComponent name={isDay == "d" ? "sunset" : "sunrise"}
+                                    value={weather?.illumination}/>
+              <WeatherInfoComponent name={"humidity"} value={weather?.humidity}/>
+              <WeatherInfoComponent name={"dust"} value={weather?.dust}/>
+              <WeatherInfoComponent name={"pressure"} value={weather?.pressure}/>
+              <WeatherInfoComponent name={"nh3"} value={weather?.nh3}/>
+              <WeatherInfoComponent name={"oxidising"} value={weather?.oxidising}/>
+              <WeatherInfoComponent name={"reducing"} value={weather?.reducing}/>
+          </WeatherInfoContainer>
+      </>
+  );
 };
+
+const WeatherComponent = () => {
+  const location = useLocation();
+  const [weather, updateWeather] = useState();
+  useEffect(() => {
+    const fetchWeather = async () => {
+      let response;
+      if(location.state) {
+        response = await Axios.get(
+          process.env.REACT_APP_BASE_URL + "/find_by_date/" + location.state.date,
+        );
+      } else {
+        response = await Axios.get(
+          process.env.REACT_APP_BASE_URL + "/get_current_indicators",
+        );
+      }
+      updateWeather(response.data)
+    }
+    fetchWeather();
+  }, [])
+  if(weather)
+    return (
+      <>
+        <WeatherCard weather={weather}/>
+      </>
+    );
+  else
+      return <></>
+}
 
 export default WeatherComponent;
