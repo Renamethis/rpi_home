@@ -12,10 +12,10 @@ def find_by_date(date):
     return by_date.delay([date,]).get(), 200
 
 # Read last 30 entries of EnvrionmentRecord from database
-@app.route("/get_last_entries/<amount>", methods=["GET"])
+@app.route("/get_last_entries/<pointer>/<amount>", methods=["GET"])
 @cross_origin(origin='*')
-def get_last_entries(amount):
-    return last_entries.delay([int(amount),]).get(), 200
+def get_last_entries(pointer, amount):
+    return last_entries.delay([int(pointer), int(amount),]).get(), 200
 
 @app.route("/get_current_indicators", methods=["GET"])
 @cross_origin(origin='*')

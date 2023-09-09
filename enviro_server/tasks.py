@@ -58,9 +58,6 @@ def update_data_from_sensors():
             current_id += 1
         db.session.commit()
 
-
-MAX_LAST_ENTRIES = CHANNELS * 3
-
 @celery.task
 def by_date(args):
     with app.app_context():
@@ -79,8 +76,8 @@ def last_entries(args):
     with app.app_context():
         last_entries = EnvironmentRecordModel.query \
             .order_by(EnvironmentRecordModel.ptime.desc()) \
-            .limit(MAX_LAST_ENTRIES)
-        return __transform_data(last_entries, args[0])
+            .slice(args[0] * CHANNELS, args[1] * CHANNELS)
+        return __transform_data(last_entries, args[1])
 
 def __transform_data(entries, amount):
         timebuf = list([str(entries[i*8].ptime) for i in range(0, amount)]) # TODO: Simplify
@@ -96,5 +93,4 @@ def __transform_data(entries, amount):
                 entry[key]['unit'] = Units[entry[key]['unit'].upper()]
             entry['datetime'] = timebuf[cnt]
             cnt += 1
-        result.reverse()
         return result
