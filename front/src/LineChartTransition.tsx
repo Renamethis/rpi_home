@@ -1,9 +1,8 @@
 import { useRef, useState } from "react";
 import { LineChart } from "./LineChart.tsx";
-import { useNavigate } from 'react-router-dom';
-import * as d3 from "d3";
+import Select from 'react-select'
 
-const BUTTONS_HEIGHT = 50;
+const BUTTONS_HEIGHT = 140;
 
 type LineChartDatasetTransitionProps = {
   data: object;
@@ -11,41 +10,51 @@ type LineChartDatasetTransitionProps = {
   height: number;
 };
 
-const buttonStyle = {
-  border: "1px solid #9a6fb0",
-  borderRadius: "3px",
-  padding: "4px 8px",
-  margin: "10px 2px",
-  fontSize: 14,
-  color: "#9a6fb0",
-  opacity: 0.7,
-};
-
 export const LineChartTransition = ({
+  currentScope,
+  currentPointer,
   entries,
   data,
   width,
   height,
 }: LineChartDatasetTransitionProps) => {
   const axesRef = useRef(null);
-  const navigate = useNavigate();
+  const selectOptions = [
+    { value: 'temperature', label: 'Temperature' },
+    { value: 'pressure', label: 'Pressure' },
+    { value: 'humidity', label: 'Humidity' },
+    { value: 'illumination', label: 'Illumination' },
+    { value: 'dust', label: 'Dust' },
+    { value: 'oxidising', label: 'Oxidising' },
+    { value: 'reducing', label: 'Reducing' },
+    { value: 'nh3', label: 'NH3' },
+  ];
   const [selectedGroup, setSelectedGroup] = useState<"temperature" | "pressure" | "humidity" | "illumination" | "dust" | "oxidising" | "reducing" | "nh3">(
     "temperature"
   );
-  const handleVariableSwitch = (event) => {
-    setSelectedGroup(event.target.value);
+  const handleVariableSwitch = (group) => {
+    setSelectedGroup(group.value);
   };
-  const currentStateHandle = () => {
-    navigate("weather")
-  }
   return (
     <div>
-      <div style={{ 
-                height: BUTTONS_HEIGHT,
-                justifyContent: "space-between",
-                alignItems: "space-between",
-        }}>
-        <select onChange={handleVariableSwitch}>
+      {<LineChart
+        currentScope={currentScope}
+        currentPointer={currentPointer}
+        axesRef={axesRef}
+        entries={entries}
+        width={width - 50}
+        height={height - BUTTONS_HEIGHT}
+        data={data}
+        selectedGroup={selectedGroup}
+      />}
+      <div style={{
+        marginTop: 25,
+        marginLeft: 10,
+        marginRight: 10,
+      }}>
+        <Select style={{
+          height: BUTTONS_HEIGHT,
+        }} menuPlacement="top" options={selectOptions} onChange={handleVariableSwitch} isSearchable={false}>
             <option value="temperature">Temperature</option>
             <option value="pressure">Pressure</option>
             <option value="humidity">Humidity</option>
@@ -54,17 +63,8 @@ export const LineChartTransition = ({
             <option value="oxidising">Oxidising</option>
             <option value="reducing">Reducing</option>
             <option value="nh3">NH3</option>
-        </select>
-        <button onClick={currentStateHandle}>Current State</button>
+        </Select>
       </div>
-      <LineChart
-        axesRef={axesRef}
-        entries={entries}
-        width={width}
-        height={height - BUTTONS_HEIGHT}
-        data={data}
-        selectedGroup={selectedGroup}
-      />
     </div>
   );
 };
