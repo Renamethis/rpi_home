@@ -1,9 +1,24 @@
 import React from "react";
 import styled from "styled-components";
-import {WeatherIcons} from "./App.js";
 import {useLocation} from 'react-router-dom';
 import { useEffect, useState } from "react";
 import Axios from "axios";
+
+export const WeatherIcons = {
+  "01d": "./icons/perfect-day.svg",
+  "01n": "./icons/night.svg",
+  "02d": "./icons/sunny.svg",
+  "02n": "./icons/night.svg",
+  "03d": "./icons/cloudy.svg",
+  "03n": "./icons/cloudy-night.svg",
+  "04n": "./icons/cloudy-night.svg",
+  "09d": "./icons/rain.svg",
+  "09n": "./icons/rain-night.svg",
+  "10d": "./icons/rain.svg",
+  "10n": "./icons/rain-night.svg",
+  "11d": "./icons/storm.svg",
+  "11n": "./icons/storm.svg",
+};
 
 export const WeatherInfoIcons = {
     sunset: "./icons/temp.svg",
@@ -127,7 +142,7 @@ const WeatherCard = ({weather}) => {
   );
 };
 
-const WeatherComponent = () => {
+const WeatherComponent = ({transitionStage}) => {
   const location = useLocation();
   const [weather, updateWeather] = useState();
   useEffect(() => {
@@ -145,15 +160,12 @@ const WeatherComponent = () => {
       updateWeather(response.data)
     }
     fetchWeather();
-  }, [])
-  if(weather)
+  }, [location])
     return (
       <>
-        <WeatherCard weather={weather}/>
+        {(weather && transitionStage != "fadeOut") && <WeatherCard weather={weather}/>}
       </>
     );
-  else
-      return <></>
 }
 
 export default WeatherComponent;
