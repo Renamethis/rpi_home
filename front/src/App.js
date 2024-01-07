@@ -1,63 +1,109 @@
 import styled from "styled-components";
+import { useEffect, useState } from "react";
+import { useNavigate, useLocation } from 'react-router-dom';
 import WeatherComponent from "./WeatherInfoComponent";
 //import ConnectedScatterplot from './D3Component.tsx';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { MainPage } from './MainPage.js'
-import './App.css'
-export const WeatherIcons = {
-  "01d": "./icons/perfect-day.svg",
-  "01n": "./icons/night.svg",
-  "02d": "./icons/sunny.svg",
-  "02n": "./icons/night.svg",
-  "03d": "./icons/cloudy.svg",
-  "03n": "./icons/cloudy-night.svg",
-  "04n": "./icons/cloudy-night.svg",
-  "09d": "./icons/rain.svg",
-  "09n": "./icons/rain-night.svg",
-  "10d": "./icons/rain.svg",
-  "10n": "./icons/rain-night.svg",
-  "11d": "./icons/storm.svg",
-  "11n": "./icons/storm.svg",
-};
+import { Menu, Layout } from "antd";
+import './App.scss'
 
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: center;
   width: 100%;
-  padding: 20px 10px;
-  margin: auto;
+  height: 100%;
+  margin: 0 0 0 0;
+  align-items: center;
   border-radius: 4px;
   box-shadow: 0 3px 6px 0 #555;
   background: white;
-  font-family: Montserrat;
+  position: relative;
 `;
 
-const AppLabel = styled.span`
-  color: black;
-  margin: 20px auto;
-  font-size: 18px;
-  font-weight: bold;
-`;
-const CloseButton = styled.span`
-  padding: 2px 3px;
-  background-color: black;
-  border-radius: 50%;
-  color: white;
-  position: absolute;
-`;
+const NavigationMenu = ({ mode }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const handleNavigate = (e) => {
+    navigate((e.key == "metrics" ? "/": "weather"));
+  }
+  return (
+    <Menu onClick={handleNavigate} mode={mode} defaultSelectedKeys={(location.pathname == "/weather") ? "current" : "metrics"}>
+      <Menu.Item key="metrics">Metrics</Menu.Item>
+      <Menu.Item key="current">CurrentState</Menu.Item>
+    </Menu>
+  );
+};
+
+function getWindowDimensions() {
+  const { innerWidth: width, innerHeight: height } = window;
+  return {
+    width,
+    height
+  };
+}
+
+function useWindowDimensions() {
+  const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
+
+  useEffect(() => {
+    function handleResize() {
+      setWindowDimensions(getWindowDimensions());
+    }
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return windowDimensions;
+}
+
+const NavigationContent = ({width, height}) => {
+  const location = useLocation();
+  const [displayLocation, setDisplayLocation] = useState(location);
+  const [transitionStage, setTransistionStage] = useState("fadeIn");
+  useEffect(() => {
+    if (location !== displayLocation) setTransistionStage("fadeOut");
+  }, [location, displayLocation]);
+  return (
+    <div style={{
+           display:"flex",
+           flexDirection:"column",
+           alignItems:"center",
+           height:height - 65
+         }}
+         className={`${transitionStage}`}
+         onAnimationEnd={() => {
+           if (transitionStage === "fadeOut") {
+             setTransistionStage("fadeIn");
+             setDisplayLocation(location);
+           }
+         }}>
+          <Container>
+            <Routes>
+              <Route path="/" element={<MainPage width={width} height={height} transitionStage={transitionStage}/>} />
+              <Route path="/weather" element={<WeatherComponent transitionStage={transitionStage}/>} />
+            </Routes>
+          </Container>
+    </div>
+  );
+};
 
 function App() {
+  const { height, width } = useWindowDimensions();
     return (
-      <Container>
-        <AppLabel>Environment Weather App</AppLabel>
+      <div style={{width: width, height: height}} scroll="no">
         <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<MainPage/>} />
-              <Route path="/weather" element={<WeatherComponent/>} />
-            </Routes>
+              <Layout>
+                <Layout.Header className="nav-header">
+                      <div className="leftMenu">
+                        <NavigationMenu mode={"horizontal"} />
+                      </div>
+                </Layout.Header>
+              </Layout>
+              <NavigationContent width={width} height={height}></NavigationContent>
         </BrowserRouter>
-      </Container>
+        </div>
     );
 }
 
