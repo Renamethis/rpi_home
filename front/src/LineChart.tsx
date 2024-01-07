@@ -1,14 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState} from "react";
 import { useNavigate } from 'react-router-dom';
-import * as d3 from "d3";
-import { useSpring, animated } from "@react-spring/web";
+//import { useSpring, animated } from "@react-spring/web";
+import { motion, useAnimation } from "framer-motion"
 import { colours } from "./Colorus.js"
+import * as d3 from "d3";
 
-export const MARGIN = { top: 30, right: 30, bottom: 50, left: 50 };
+export const MARGIN = { top: 30, right: 30, bottom: 30, left: 20 };
 
-type EnvironmentPoint = { x : number; temperature : number; pressure: number; 
-                          humidity : number; illumination : number; 
-                          dust : number; oxidising: number; reducing : number; 
+type EnvironmentPoint = { x : number; temperature : number; pressure: number;
+                          humidity : number; illumination : number;
+                          dust : number; oxidising: number; reducing : number;
                           nh3 : number, datetime: string};
 
 type LineChartProps = {
@@ -18,7 +19,31 @@ type LineChartProps = {
   selectedGroup: "temperature" | "pressure" | "humidity" | "illumination" | "dust" | "oxidising" | "reducing" | "nh3";
 };
 
+/*
+function useAnimatedPath({ toggle }) {
+  const [length, setLength] = useState(null);
+  const animatedStyle = useSpring({
+    strokeDashoffset: toggle ? 0 : length,
+    strokeDasharray: length,
+    config: {
+      duration: 5000,
+    },
+  });
+
+  return {
+    style: animatedStyle,
+    ref: (ref) => {
+      if (ref) {
+        setLength(ref.getTotalLength());
+      }
+    },
+  };
+}
+*/
+
 export const LineChart = ({
+  currentPointer,
+  currentScope,
   axesRef,
   entries,
   width,
@@ -33,31 +58,34 @@ export const LineChart = ({
     const max = d3.max(values);
     const min = d3.min(values);
     const yScale = useMemo(() => {
-        return d3.scaleLinear().domain([Math.round(min * 0.9), Math.round(max * 1.1)]).range([boundsHeight, 0]);
-    }, [data, height, max, min]);
+        return d3.scaleLinear().domain([Math.round(min * 0.9), Math.round(max * 1.1)]).range([boundsHeight, 0])
+    }, [data, max, min]);
 
     const xScale = useMemo(() => {
-        return d3.scaleLinear().domain([-1, entries]).range([0, boundsWidth]);
-    }, [data, width]);
+        return d3.scaleLinear().domain([entries + currentPointer, currentPointer - 1]).range([0, boundsWidth]);
+    }, [data, currentPointer]);
+    const [linePath, updateLinePath] = useState([]);
 
-  // Render the X and Y axis using d3.js, not react
+  /*
   useEffect(() => {
-    const svgElement = d3.select(axesRef.current);
-    const Tooltip = svgElement.append("div")
-    .style("opacity", 0)
-    .attr("class", "tooltip")
-    .style("background-color", "white")
-    .style("border", "solid")
-    .style("border-width", "2px")
-    .style("border-radius", "5px")
-    .style("padding", "5px")
+    const lineBuilder = d3
+    .line<EnvironmentPoint>()
+    .x((d) => xScale(d.x))
+    .y((d) => yScale(d[selectedGroup]));
+    updateLinePath(lineBuilder(data));
+  }, [currentScope]);
+  */
 
+  useEffect(() => {
+
+    const svgElement = d3.select(axesRef.current)
     svgElement.selectAll("g").remove();
     svgElement.selectAll("g").remove();
     const xAxisGenerator = d3.axisBottom(xScale);
     svgElement
       .append("g")
       .attr("class", "x axis")
+      .attr("margin", "10px")
       .attr("transform", "translate(0," + boundsHeight + ")")
       .transition()
       .duration(750)
@@ -65,6 +93,7 @@ export const LineChart = ({
 
     const yAxisGenerator = d3.axisLeft(yScale);
     svgElement.append("g")
+              .attr("margin", "10px")
               .attr("class", "y axis")
               .transition()
               .duration(750)
@@ -77,45 +106,32 @@ export const LineChart = ({
               .duration(630)
               .attr("class", "circle")
               .attr("cx", d => xScale(d.x))
-              .attr("cy", d => yScale(d[String(selectedGroup)]))
+              .attr("cy", d => yScale(d[selectedGroup]))
               .attr("r", 5)
               .attr("stroke", "#69b3a2")
               .attr("stroke-width", 3)
               .attr("fill", "white")
+      // Events
       svgElement.selectAll('circle')
-              .on("click", function(event, a) {
-                const time = event.target.__data__.datetime
-                navigate('weather', {state:{date:time}})
-              });
-        
+                .on("click", function(event, a) {
+                  event.preventDefault()
+                  const time = event.target.__data__.datetime
+                  navigate('weather', {state:{date:time}})
+                })
+      const lineBuilder = d3
+      .line<EnvironmentPoint>()
+      .x((d) => xScale(d.x))
+      .y((d) => yScale(d[selectedGroup]));
+      updateLinePath(lineBuilder(data));
+  }, [currentPointer, xScale, yScale, boundsHeight]);
 
-      svgElement.selectAll('circle')
-      
-  }, [xScale, yScale, boundsHeight]);
-
-  const lineBuilder = d3
-    .line<EnvironmentPoint>()
-    .x((d) => xScale(d.x))
-    .y((d) => yScale(d[selectedGroup]));
-  const linePath = lineBuilder(data);
-  if (!linePath) {
-    return null;
-  }
   return (
      <div>
-      <svg width={width} height={height}>
-        {/* first group is lines */}
-        <g
-          width={boundsWidth}
-          height={boundsHeight}
-          transform={`translate(${[MARGIN.left, MARGIN.top].join(",")})`}
-        >
-          <LineItem
-            path={linePath}
-            color={colours[selectedGroup]}
-          />
+      <svg className="svg_element" width={width} height={height} transform={`translate(${[MARGIN.left, MARGIN.top].join(",")})`}>
+        <g width={boundsWidth} height={boundsHeight} transform={`translate(${[MARGIN.left, MARGIN.top].join(",")})`}>
+          {/*linePath.map(line => (<LineItem path={line} color={colours[selectedGroup]} length={linePath.getTotalLength}/>))*/
+          linePath && <LineItem path={linePath} color={colours[selectedGroup]} length={linePath.getTotalLength}/>}
         </g>
-        {/* Second is for the axes */}
         <g
           width={boundsWidth}
           height={boundsHeight}
@@ -132,7 +148,14 @@ type LineItemProps = {
   color: string;
 };
 
+const transition = { duration: 4, yoyo: Infinity, ease: "easeInOut",   damping: 10,
+stiffness: 100}
+function template({ rotate, x }) {
+  return `rotate(${rotate}) translateX(${x})`
+}
 const LineItem = ({ path, color }: LineItemProps) => {
+  /*
+  const animationProps = useAnimatedPath({ toggle });
   const springProps = useSpring({
     to: {
       path,
@@ -142,14 +165,38 @@ const LineItem = ({ path, color }: LineItemProps) => {
       friction: 40,
     },
   });
-
+  */
+  const anim = useAnimation();
+  useEffect(() => {
+    anim.start();
+  });
+  const icon = {
+    hidden: {
+      pathLength: 0,
+      x: 0,
+      fill: "rgba(255, 255, 255, 0)",
+    },
+    visible: {
+      pathLength: 1,
+      fill: "rgba(255, 255, 255, 1)",
+    }
+  }
   return (
-    <animated.path
-      d={springProps.path}
+    <>
+    <motion.path
+      d={path}
+      variants={icon}
+      initial="hidden"
+      animate="visible"
       fill={"none"}
       stroke={color}
       strokeWidth={2}
+      transformTemplate={template}
+      transition={transition}
+      //{...animationProps}
     />
+    </>
   );
 };
+
 
