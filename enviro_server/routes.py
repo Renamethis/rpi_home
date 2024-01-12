@@ -17,7 +17,7 @@ def find_by_date(date):
 def get_last_entries(pointer, amount):
     return last_entries.delay([int(pointer), int(amount),]).get(), 200
 
-@app.route("/get_current_indicators", methods=["GET"])
+@app.route("/get_current_state", methods=["GET"])
 @cross_origin(origin='*')
 def get_current_indicators():
     return current_state.delay().get(), 200

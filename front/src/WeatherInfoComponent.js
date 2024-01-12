@@ -154,7 +154,7 @@ const WeatherComponent = ({transitionStage}) => {
         );
       } else {
         response = await Axios.get(
-          process.env.REACT_APP_BASE_URL + "/get_current_indicators",
+          process.env.REACT_APP_BASE_URL + "/get_current_state",
         );
       }
       updateWeather(response.data)
