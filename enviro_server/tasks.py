@@ -22,15 +22,16 @@ logger = get_task_logger(__name__)
 @worker_ready.connect
 def initialize(sender, **k):
     with app.app_context():
-        app.interface = EnvironmentInterface(redis_client)
-        app.interface.start()
-        for unit in Units:
-            new_entry = EnvironmentUnitModel(
-                type = unit.name.lower(),
-                unit = unit.value
-            )
-            db.session.add(new_entry)
-        db.session.commit()
+        if(not EnvironmentUnitModel.query.first()):
+            app.interface = EnvironmentInterface(redis_client)
+            app.interface.start()
+            for unit in Units:
+                new_entry = EnvironmentUnitModel(
+                    type = unit.name.lower(),
+                    unit = unit.value
+                )
+                db.session.add(new_entry)
+            db.session.commit()
 
 
 @celery.task
