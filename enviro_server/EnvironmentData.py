@@ -19,7 +19,7 @@ Limits = {
     "humidity" : (45, 70),
     "illumination" : (30, 250),
     "dust" : (30, 100),
-    "oxidising" : (40, 60),
+    "oxidizing" : (40, 60),
     "reducing" : (700, 1000),
     "nh3" : (120, 200),
 }
@@ -46,7 +46,7 @@ class EnvironmentData:
         humidity : EnvironmentValue # %
         illumination : EnvironmentValue # lux
         dust : EnvironmentValue # ug/m3
-        oxidising : EnvironmentValue # Ok
+        oxidizing : EnvironmentValue # Ok
         reducing : EnvironmentValue # Ok
         nh3 : EnvironmentValue # Ok
 

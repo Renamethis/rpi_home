@@ -33,7 +33,7 @@ class EnvironmentInterface(Thread):
             illumination = ltr559.get_lux() # lux
             dust = float(self.__pms5003.read().pm_ug_per_m3(2.5)) # ug/m3
             gas_data = gas.read_all() # Ok
-            oxidising = gas_data.oxidising / 1000
+            oxidizing = gas_data.oxidising / 1000
             reducing = gas_data.reducing / 1000
             nh3 = gas_data.nh3 / 1000
             data = EnvironmentData(
@@ -43,7 +43,7 @@ class EnvironmentInterface(Thread):
                 EnvironmentValue(humidity, Units.HUMIDITY, Limits["humidity"]),
                 EnvironmentValue(illumination, Units.ILLUMINATION, Limits["illumination"]),
                 EnvironmentValue(dust, Units.DUST, Limits["dust"]),
-                EnvironmentValue(oxidising, Units.GAS, Limits["oxidising"]),
+                EnvironmentValue(oxidizing, Units.GAS, Limits["oxidizing"]),
                 EnvironmentValue(reducing, Units.GAS, Limits["reducing"]),
                 EnvironmentValue(nh3, Units.GAS, Limits["nh3"])
             )
@@ -68,7 +68,7 @@ class EnvironmentInterface(Thread):
         avg_cpu_temp = sum(cpu_temps) / float(len(cpu_temps))
         raw_temp = self.__bme280.get_temperature()
         return raw_temp - ((avg_cpu_temp - raw_temp) / self.FACTOR)
-    
+
     def __get_cpu_temperature(self):
         with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
             temp = f.read()
