@@ -77,28 +77,32 @@ def last_entries(args):
     with app.app_context():
         last_entries = EnvironmentRecordModel.query \
             .order_by(EnvironmentRecordModel.ptime.desc())
-        startSlice = args[0] * CHANNELS
-        endSlice = args[1] * CHANNELS
-        amount = args[1]
-        if(endSlice - startSlice + 1 > last_entries.count()):
-            startSlice = 0
-            endSlice = last_entries.count()
-            amount = int(last_entries.count() / CHANNELS)
+        startSlice, endSlice, amount = __calculate_slices(args, last_entries.count())
         return __transform_data(last_entries.slice(startSlice, endSlice), amount)
 
 def __transform_data(entries, amount):
-        logger.info(amount)
-        timebuf = list([str(entries[i*CHANNELS].ptime) for i in range(0, amount)]) # TODO: Simplify
-        result = [{entry.field_name: \
-                {key: value for key, value in entry.to_dict().items() \
-                    if key != "field_name" and key != "ptime"} \
-            for entry in entries[i*CHANNELS:i*CHANNELS + CHANNELS]} \
+        result = [__add_datetime({entry.field_name: \
+                __transform_entry({key: value for key, value in entry.to_dict().items() \
+                    if key != "field_name" and key != "ptime"}, entry.field_name) \
+            for entry in entries[i*CHANNELS:i*CHANNELS + CHANNELS]}, entries[i*CHANNELS].ptime) \
                 for i in range(0, amount)]
-        cnt = 0
-        for entry in result:
-            for key in entry:
-                entry[key]['limits'] = Limits[key]
-                entry[key]['unit'] = Units[entry[key]['unit'].upper()]
-            entry['datetime'] = timebuf[cnt]
-            cnt += 1
         return result
+
+def __add_datetime(object, time):
+    object['datetime'] = time
+    return object
+
+def __transform_entry(entry, key):
+    entry['limits'] = Limits[key]
+    entry['unit'] = Units[entry['unit'].upper()]
+    return entry
+
+def __calculate_slices(args, entries_count):
+    startSlice = args[0]* CHANNELS
+    endSlice = args[1] * CHANNELS
+    amount = args[1]
+    if(endSlice - startSlice + 1 > entries_count):
+        startSlice = 0
+        endSlice = entries_count
+        amount = int(entries_count / CHANNELS)
+    return startSlice, endSlice, amount
