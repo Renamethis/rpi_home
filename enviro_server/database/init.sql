@@ -1,4 +1,9 @@
 GRANT ALL PRIVILEGES ON DATABASE rpi TO root;
+
+-- If you need to clean-up tables:
+-- DROP TABLE IF EXISTS environment_record;
+-- DROP TABLE IF EXISTS environment_units;
+
 CREATE TABLE IF NOT EXISTS environment_units(
     type varchar(50) not null primary key,
     unit varchar(10) not null
