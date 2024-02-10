@@ -22,9 +22,9 @@ logger = get_task_logger(__name__)
 @worker_ready.connect
 def initialize(sender, **k):
     with app.app_context():
+        app.interface = EnvironmentInterface(redis_client)
+        app.interface.start()
         if(not EnvironmentUnitModel.query.first()):
-            app.interface = EnvironmentInterface(redis_client)
-            app.interface.start()
             for unit in Units:
                 new_entry = EnvironmentUnitModel(
                     type = unit.name.lower(),
@@ -76,16 +76,23 @@ def current_state():
 def last_entries(args):
     with app.app_context():
         last_entries = EnvironmentRecordModel.query \
-            .order_by(EnvironmentRecordModel.ptime.desc()) \
-            .slice(args[0] * CHANNELS, args[1] * CHANNELS)
-        return __transform_data(last_entries, args[1])
+            .order_by(EnvironmentRecordModel.ptime.desc())
+        startSlice = args[0] * CHANNELS
+        endSlice = args[1] * CHANNELS
+        amount = args[1]
+        if(endSlice - startSlice + 1 > last_entries.count()):
+            startSlice = 0
+            endSlice = last_entries.count()
+            amount = int(last_entries.count() / CHANNELS)
+        return __transform_data(last_entries.slice(startSlice, endSlice), amount)
 
 def __transform_data(entries, amount):
-        timebuf = list([str(entries[i*8].ptime) for i in range(0, amount)]) # TODO: Simplify
+        logger.info(amount)
+        timebuf = list([str(entries[i*CHANNELS].ptime) for i in range(0, amount)]) # TODO: Simplify
         result = [{entry.field_name: \
                 {key: value for key, value in entry.to_dict().items() \
                     if key != "field_name" and key != "ptime"} \
-            for entry in entries[i*8:i*8 + 8]} \
+            for entry in entries[i*CHANNELS:i*CHANNELS + CHANNELS]} \
                 for i in range(0, amount)]
         cnt = 0
         for entry in result:
