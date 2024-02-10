@@ -9,37 +9,15 @@ export const MARGIN = { top: 30, right: 30, bottom: 30, left: 20 };
 
 type EnvironmentPoint = { x : number; temperature : number; pressure: number;
                           humidity : number; illumination : number;
-                          dust : number; oxidising: number; reducing : number;
+                          dust : number; oxidizing: number; reducing : number;
                           nh3 : number, datetime: string};
 
 type LineChartProps = {
   width: number;
   height: number;
   data: EnvironmentPoint[];
-  selectedGroup: "temperature" | "pressure" | "humidity" | "illumination" | "dust" | "oxidising" | "reducing" | "nh3";
+  selectedGroup: "temperature" | "pressure" | "humidity" | "illumination" | "dust" | "oxidizing" | "reducing" | "nh3";
 };
-
-/*
-function useAnimatedPath({ toggle }) {
-  const [length, setLength] = useState(null);
-  const animatedStyle = useSpring({
-    strokeDashoffset: toggle ? 0 : length,
-    strokeDasharray: length,
-    config: {
-      duration: 5000,
-    },
-  });
-
-  return {
-    style: animatedStyle,
-    ref: (ref) => {
-      if (ref) {
-        setLength(ref.getTotalLength());
-      }
-    },
-  };
-}
-*/
 
 export const LineChart = ({
   currentPointer,
@@ -65,16 +43,6 @@ export const LineChart = ({
         return d3.scaleLinear().domain([entries + currentPointer, currentPointer - 1]).range([0, boundsWidth]);
     }, [data, currentPointer]);
     const [linePath, updateLinePath] = useState([]);
-
-  /*
-  useEffect(() => {
-    const lineBuilder = d3
-    .line<EnvironmentPoint>()
-    .x((d) => xScale(d.x))
-    .y((d) => yScale(d[selectedGroup]));
-    updateLinePath(lineBuilder(data));
-  }, [currentScope]);
-  */
 
   useEffect(() => {
 
@@ -111,7 +79,6 @@ export const LineChart = ({
               .attr("stroke", "#69b3a2")
               .attr("stroke-width", 3)
               .attr("fill", "white")
-      // Events
       svgElement.selectAll('circle')
                 .on("click", function(event, a) {
                   event.preventDefault()
@@ -154,18 +121,6 @@ function template({ rotate, x }) {
   return `rotate(${rotate}) translateX(${x})`
 }
 const LineItem = ({ path, color }: LineItemProps) => {
-  /*
-  const animationProps = useAnimatedPath({ toggle });
-  const springProps = useSpring({
-    to: {
-      path,
-      color,
-    },
-    config: {
-      friction: 40,
-    },
-  });
-  */
   const anim = useAnimation();
   useEffect(() => {
     anim.start();
@@ -193,7 +148,6 @@ const LineItem = ({ path, color }: LineItemProps) => {
       strokeWidth={2}
       transformTemplate={template}
       transition={transition}
-      //{...animationProps}
     />
     </>
   );

@@ -25,11 +25,11 @@ export const LineChartTransition = ({
     { value: 'humidity', label: 'Humidity' },
     { value: 'illumination', label: 'Illumination' },
     { value: 'dust', label: 'Dust' },
-    { value: 'oxidising', label: 'Oxidising' },
+    { value: 'oxidizing', label: 'Oxidizing' },
     { value: 'reducing', label: 'Reducing' },
     { value: 'nh3', label: 'NH3' },
   ];
-  const [selectedGroup, setSelectedGroup] = useState<"temperature" | "pressure" | "humidity" | "illumination" | "dust" | "oxidising" | "reducing" | "nh3">(
+  const [selectedGroup, setSelectedGroup] = useState<"temperature" | "pressure" | "humidity" | "illumination" | "dust" | "Oxidizing" | "reducing" | "nh3">(
     "temperature"
   );
   const handleVariableSwitch = (group) => {
@@ -60,7 +60,7 @@ export const LineChartTransition = ({
             <option value="humidity">Humidity</option>
             <option value="illumination">Illumination</option>
             <option value="dust">Dust</option>
-            <option value="oxidising">Oxidising</option>
+            <option value="oxidizing">Oxidizing</option>
             <option value="reducing">Reducing</option>
             <option value="nh3">NH3</option>
         </Select>

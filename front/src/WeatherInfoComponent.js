@@ -27,7 +27,7 @@ export const WeatherInfoIcons = {
     dust: "./icons/dust.svg",
     pressure: "./icons/pressure.svg",
     nh3: "./icons/nh3.png",
-    oxidising: "./icons/oxidising.png",
+    oxidizing: "./icons/oxidizing.png",
     reducing: "./icons/reducing.png"
 };
 const Location = styled.span`
@@ -135,7 +135,7 @@ const WeatherCard = ({weather}) => {
               <WeatherInfoComponent name={"dust"} value={weather?.dust}/>
               <WeatherInfoComponent name={"pressure"} value={weather?.pressure}/>
               <WeatherInfoComponent name={"nh3"} value={weather?.nh3}/>
-              <WeatherInfoComponent name={"oxidising"} value={weather?.oxidising}/>
+              <WeatherInfoComponent name={"oxidizing"} value={weather?.oxidizing}/>
               <WeatherInfoComponent name={"reducing"} value={weather?.reducing}/>
           </WeatherInfoContainer>
       </>
