@@ -81,10 +81,11 @@ def last_entries(args):
         return __transform_data(last_entries.slice(startSlice, endSlice), amount)
 
 def __transform_data(entries, amount):
-        result = [__add_datetime({entry.field_name: \
-                __transform_entry({key: value for key, value in entry.to_dict().items() \
-                    if key != "field_name" and key != "ptime"}, entry.field_name) \
-            for entry in entries[i*CHANNELS:i*CHANNELS + CHANNELS]}, entries[i*CHANNELS].ptime) \
+        result = [__add_datetime(
+                    {entry.field_name: \
+                        __transform_entry({key: value for key, value in entry.to_dict().items() \
+                                           if key != "field_name" and key != "ptime"}, entry.field_name) \
+                    for entry in entries[i*CHANNELS:i*CHANNELS + CHANNELS]}, entries[i*CHANNELS].ptime) \
                 for i in range(0, amount)]
         return result
 
