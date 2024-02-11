@@ -11,14 +11,15 @@ from .EnvironmentThread import EnvironmentInterface
 from json import dump
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
-celery.conf.beat_schedule = {
-    'update_task': {
-        'task': 'enviro_server.tasks.update_data_from_sensors',
-        'schedule': 30.0,
-    },
-}
-celery.conf.timezone = 'UTC'
-logger = get_task_logger(__name__)
+if(os.getenv("UNITTEST_ENVIRONMENT") is None):
+    celery.conf.beat_schedule = {
+        'update_task': {
+            'task': 'enviro_server.tasks.update_data_from_sensors',
+            'schedule': 30.0,
+        },
+    }
+    celery.conf.timezone = 'UTC'
+    logger = get_task_logger(__name__)
 
 @worker_ready.connect
 def initialize(sender, **k):
