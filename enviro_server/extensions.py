@@ -45,5 +45,7 @@ celery = FlaskCelery(
     include=["enviro_server.tasks"]
 )
 cors = CORS()
+
 redis_client = redis.Redis()
-redis_client.ltrim("Data", 0, 10)
+if(os.getenv("UNITTEST_ENVIRONMENT") is None):
+    redis_client.ltrim("Data", 0, 10)
