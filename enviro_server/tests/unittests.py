@@ -7,8 +7,10 @@ def suite():
     suite.addTest(EnvironmentValueTest('test_serialize'))
     suite.addTest(EnvironmentDataTest('test_deserialize'))
     suite.addTest(EnvironmentDataTest('get_dict'))
-    suite.addTest(DataTransformTest("test_transform_data_big_amount"))
-    suite.addTest(DataTransformTest("test_transform_data_small_amount"))
+    suite.addTest(DataTransformTest("test_transform_data_big"))
+    suite.addTest(DataTransformTest("test_transform_data_small"))
+    suite.addTest(DataTransformTest("test_calculate_slices_big"))
+    suite.addTest(DataTransformTest("test_calculate_slices_small"))
     return suite
 
 if __name__ == '__main__':
