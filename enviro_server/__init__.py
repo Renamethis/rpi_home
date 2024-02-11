@@ -1,9 +1,10 @@
 import os
-from flask import Flask
-from config import config
-from .extensions import db, celery, cors
 
-if os.getenv("TEST_ENVIRONMENT") is None:
+if os.getenv("UNITTEST_ENVIRONMENT") is None:
+    from flask import Flask
+    from config import config
+    from .extensions import db, celery, cors
+
     # Flask factory
     def create_app(config_name):
         app = Flask(__name__)
