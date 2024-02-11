@@ -1,3 +1,4 @@
+import os
 import flask
 from celery import Celery
 from flask_sqlalchemy import SQLAlchemy
@@ -39,10 +40,12 @@ class FlaskCelery(Celery):
 db = SQLAlchemy()
 celery = FlaskCelery(
     'enviro_server',
-    broker="redis://127.0.0.1:6379/0",
-    backend="redis://127.0.0.1:6379/0",
+    broker=os.getenv("REDIS_URL"),
+    backend=os.getenv("REDIS_URL"),
     include=["enviro_server.tasks"]
 )
 cors = CORS()
+
 redis_client = redis.Redis()
-redis_client.ltrim("Data", 0, 10)
+if(os.getenv("UNITTEST_ENVIRONMENT") is None):
+    redis_client.ltrim("Data", 0, 10)

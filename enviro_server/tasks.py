@@ -3,21 +3,23 @@ from . import create_app
 from celery.signals import task_prerun
 import os
 from celery.signals import worker_ready
-from .EnvironmentData import Units, EnvironmentData, CHANNELS, Limits
+from .EnvironmentData import Units, EnvironmentData
 from .database.models import EnvironmentUnitModel, EnvironmentRecordModel
+from .transform_utils import transform_data, calculate_slices
 from celery.utils.log import get_task_logger
 from .EnvironmentThread import EnvironmentInterface
-from datetime import datetime
+from json import dump
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
-celery.conf.beat_schedule = {
-    'update_task': {
-        'task': 'enviro_server.tasks.update_data_from_sensors',
-        'schedule': 30.0,
-    },
-}
-celery.conf.timezone = 'UTC'
-logger = get_task_logger(__name__)
+if(os.getenv("UNITTEST_ENVIRONMENT") is None):
+    celery.conf.beat_schedule = {
+        'update_task': {
+            'task': 'enviro_server.tasks.update_data_from_sensors',
+            'schedule': 30.0,
+        },
+    }
+    celery.conf.timezone = 'UTC'
+    logger = get_task_logger(__name__)
 
 @worker_ready.connect
 def initialize(sender, **k):
@@ -63,7 +65,7 @@ def update_data_from_sensors():
 def by_date(args):
     with app.app_context():
         sorted_by_date =  EnvironmentRecordModel.query.filter_by(ptime=args[0])
-        return __transform_data(sorted_by_date, 1)[0]
+        return transform_data(sorted_by_date, 1)[0]
 
 
 @celery.task
@@ -77,33 +79,7 @@ def last_entries(args):
     with app.app_context():
         last_entries = EnvironmentRecordModel.query \
             .order_by(EnvironmentRecordModel.ptime.desc())
-        startSlice, endSlice, amount = __calculate_slices(args, last_entries.count())
-        return __transform_data(last_entries.slice(startSlice, endSlice), amount)
-
-def __transform_data(entries, amount):
-        result = [__add_datetime(
-                    {entry.field_name: \
-                        __transform_entry({key: value for key, value in entry.to_dict().items() \
-                                           if key != "field_name" and key != "ptime"}, entry.field_name) \
-                    for entry in entries[i*CHANNELS:i*CHANNELS + CHANNELS]}, entries[i*CHANNELS].ptime) \
-                for i in range(0, amount)]
-        return result
-
-def __add_datetime(object, time):
-    object['datetime'] = time
-    return object
-
-def __transform_entry(entry, key):
-    entry['limits'] = Limits[key]
-    entry['unit'] = Units[entry['unit'].upper()]
-    return entry
-
-def __calculate_slices(args, entries_count):
-    startSlice = args[0]* CHANNELS
-    endSlice = args[1] * CHANNELS
-    amount = args[1]
-    if(endSlice - startSlice + 1 > entries_count):
-        startSlice = 0
-        endSlice = entries_count
-        amount = int(entries_count / CHANNELS)
-    return startSlice, endSlice, amount
+        with open("data_transform_resource.json", "w") as file:
+            dump([entry.to_dict() for entry in last_entries], file, indent=4, sort_keys=True, default=str)
+        startSlice, endSlice, amount = calculate_slices(args, last_entries.count())
+        return transform_data(last_entries.slice(startSlice, endSlice), amount)
