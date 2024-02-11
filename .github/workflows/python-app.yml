@@ -30,4 +30,4 @@ jobs:
         pipenv install
     - name: Unittest
       run: |
-        pipenv run python -m unittest enviro_server/tests/unittests.py
+        UNITTEST_ENVIRONMENT="ON" pipenv run python -m unittest enviro_server/tests/unittests.py
