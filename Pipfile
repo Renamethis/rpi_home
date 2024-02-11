@@ -16,6 +16,7 @@ celery = "*"
 redis = "*"
 setuptools = "*"
 psycopg2 = "*"
+pytest = "*"
 
 [dev-packages]
 
