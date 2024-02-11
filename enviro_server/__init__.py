@@ -1,7 +1,8 @@
 import os
-from flask import Flask
-from config import config
-from .extensions import db, celery, cors
+if(os.getenv("UNITTEST_ENVIRONMENT") is None):
+    from flask import Flask
+    from config import config
+    from .extensions import db, celery, cors
 
 # Flask factory
 def create_app(config_name):
