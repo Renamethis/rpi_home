@@ -2,7 +2,7 @@ import pathlib
 from datetime import datetime
 from enviro_server.EnvironmentData import CHANNELS, Units, Limits
 from enviro_server.tests.DataTest import DataTest
-from enviro_server.tasks import transform_data, calculate_slices
+from enviro_server.transform_utils import transform_data, calculate_slices
 
 class DataTransformTest(DataTest):
         def setUp(self):
