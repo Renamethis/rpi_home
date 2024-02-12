@@ -1,8 +1,13 @@
 from .EnvironmentData import Units, CHANNELS, Limits
 
 def transform_data(entries, amount):
-    if(len(entries) < amount * CHANNELS):
-        amount = int(len(entries) / CHANNELS)
+    try:
+        entries_length = entries.count()
+    except TypeError:
+        entries_length = len(entries)
+
+    if(entries_length < amount * CHANNELS):
+        amount = int(entries_length / CHANNELS)
     return [__add_datetime(
                 {entry.field_name: \
                     __transform_entry({key: value for key, value in entry.to_dict().items() \
