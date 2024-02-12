@@ -7,7 +7,8 @@ from .EnvironmentData import Units, EnvironmentData
 from .database.models import EnvironmentUnitModel, EnvironmentRecordModel
 from .transform_utils import transform_data, calculate_slices
 from celery.utils.log import get_task_logger
-from .EnvironmentThread import EnvironmentInterface
+from .EnvironmentThread import EnvironmentThread
+from .LedMatrix import MatrixThread
 from json import dump
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
@@ -24,8 +25,10 @@ if(os.getenv("UNITTEST_ENVIRONMENT") is None):
 @worker_ready.connect
 def initialize(sender, **k):
     with app.app_context():
-        app.interface = EnvironmentInterface(redis_client)
+        app.interface = EnvironmentThread(redis_client)
+        app.matrix = MatrixThread()
         app.interface.start()
+        app.matrix.start()
         if(not EnvironmentUnitModel.query.first()):
             for unit in Units:
                 new_entry = EnvironmentUnitModel(
