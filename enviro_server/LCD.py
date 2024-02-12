@@ -8,7 +8,7 @@ import numpy as np
 import ST7735
 
 class LCD:
-    
+
     COLORS = ((20, 255, 20), (200, 200, 0), (255, 0, 0))
 
     def __init__(self):
@@ -70,19 +70,20 @@ class LCD:
     def __load_resources(self, directory):
         bitmaps = {}
         for filename in os.listdir(directory):
-            if(len(filename.split('-')) > 1):
-                pattern = filename.split('-')[0]
-                matched_list = []
-                for f in os.listdir(directory):
-                    if(pattern in f):
-                        matched_list.append(f)
-                matched_list = sorted(matched_list)
-                bitmap_list = [self.__read_bitmap(
-                    os.path.join(directory, file)) for file in matched_list]
-                bitmaps[filename.split('-')[0]] = bitmap_list
-                continue
-            bitmaps[filename.split('.')[0]] = \
-                self.__read_bitmap('resources/%s' % filename)
+            if(filename.endswith('.png')):
+                if(len(filename.split('-')) > 1):
+                    pattern = filename.split('-')[0]
+                    matched_list = []
+                    for f in os.listdir(directory):
+                        if(pattern in f):
+                            matched_list.append(f)
+                    matched_list = sorted(matched_list)
+                    bitmap_list = [self.__read_bitmap(
+                        os.path.join(directory, file)) for file in matched_list]
+                    bitmaps[filename.split('-')[0]] = bitmap_list
+                    continue
+                bitmaps[filename.split('.')[0]] = \
+                    self.__read_bitmap('resources/%s' % filename)
         return bitmaps
 
     def __read_bitmap(self, filename):
