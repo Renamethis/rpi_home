@@ -164,6 +164,14 @@
             "index": "pypi",
             "version": "==0.0.6"
         },
+        "unicornhatmini": {
+            "hashes": [
+                "sha256:5b1bcf65197c1ae068f9c548c1c7e664b9b7730c64ae2c4af7faccc824e30f27",
+                "sha256:157926f04fc2330d1f2bd48e4a2cdee303b4a4a54ab4f579ee6828c4d39998bc"
+            ],
+            "index": "pypi",
+            "version": "==0.0.1"
+        },
         "flask": {
             "hashes": [
                 "sha256:642c450d19c4ad482f96729bd2a8f6d32554aa1e231f4f6b4e7e5264b16cca2b",
