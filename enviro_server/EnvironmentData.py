@@ -30,8 +30,8 @@ class EnvironmentValue:
     unit: Units
     limits: tuple
 
-    @property
-    def dict(dictionary):
+    @staticmethod
+    def from_dict(dictionary):
         return EnvironmentValue(
             value = dictionary['value'],
             unit = Units(dictionary['unit']),
