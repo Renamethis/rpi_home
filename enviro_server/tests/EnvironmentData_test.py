@@ -32,8 +32,8 @@ class EnvironmentDataTest(unittest.TestCase):
                          EnvironmentData.from_message(self.__data.serialize()),
                          "Serialization or deserialization was failed.")
 
-    def test_get_dict(self):
-        data_dict = self.__data.get_dict()
+    def test_dict(self):
+        data_dict = self.__data.dict
         self.assertIs(type(data_dict), dict)
         self.assertEqual(len(data_dict), CHANNELS + 1)
         for key in data_dict.keys():

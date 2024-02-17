@@ -30,8 +30,8 @@ class EnvironmentValue:
     unit: Units
     limits: tuple
 
-    @staticmethod
-    def from_dict(dictionary):
+    @property
+    def dict(dictionary):
         return EnvironmentValue(
             value = dictionary['value'],
             unit = Units(dictionary['unit']),
@@ -68,9 +68,11 @@ class EnvironmentData:
         def from_message(message):
             return EnvironmentData.__from_dict(loads(message))
 
-        def get_dict(self):
+        @property
+        def dict(self):
             return {k: (str(v) if isinstance(v, datetime) else v) \
                 for k, v in asdict(self).items()}
 
+        @classmethod
         def serialize(self):
-            return dumps(self.get_dict())
+            return dumps(self.dict)

@@ -28,7 +28,7 @@ def initialize(sender, **k):
         app.interface = EnvironmentThread(redis_client)
         app.matrix = MatrixThread()
         app.interface.start()
-        app.matrix.start()
+        # app.matrix.start()
         if(not EnvironmentUnitModel.query.first()):
             for unit in Units:
                 new_entry = EnvironmentUnitModel(
@@ -43,7 +43,7 @@ def initialize(sender, **k):
 def update_data_from_sensors():
     with app.app_context():
         data = redis_client.lrange('Data', -1, -1)
-        data = EnvironmentData.from_message(data[0]).get_dict()
+        data = EnvironmentData.from_message(data[0]).dict
         last = EnvironmentRecordModel.query. \
             order_by(EnvironmentRecordModel.id.desc()).first()
         current_id = 0 if last is None else last.id + 1
@@ -74,7 +74,7 @@ def by_date(args):
 @celery.task
 def current_state():
     with app.app_context():
-        return EnvironmentData.from_message(redis_client.lrange('Data', -1, -1)[0]).get_dict()
+        return EnvironmentData.from_message(redis_client.lrange('Data', -1, -1)[0]).dict
 
 
 @celery.task
