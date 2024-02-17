@@ -73,6 +73,5 @@ class EnvironmentData:
             return {k: (str(v) if isinstance(v, datetime) else v) \
                 for k, v in asdict(self).items()}
 
-        @classmethod
         def serialize(self):
             return dumps(self.dict)
