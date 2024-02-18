@@ -5,9 +5,9 @@ name: functional
 
 on:
   push:
-    branches: [ "test-infra-functional" ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ "test-infra-functional" ]
+    branches: [ "master" ]
 
 permissions:
   contents: read
