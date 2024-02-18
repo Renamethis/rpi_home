@@ -27,7 +27,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pipenv
-        pipenv install
+        pipenv sync
         git lfs fetch && git lfs pull
     - name: unittests
       run: |
