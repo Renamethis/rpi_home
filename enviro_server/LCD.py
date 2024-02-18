@@ -1,3 +1,5 @@
+# Don't working with unicornhatmini
+
 import os
 from dataclasses import fields
 from PIL import Image
@@ -11,7 +13,7 @@ class LCD:
 
     COLORS = ((20, 255, 20), (200, 200, 0), (255, 0, 0))
 
-    def __init__(self):
+    def __init__(self, backlight):
         # Initialize LCD screen
         self.__st7735 = ST7735.ST7735(
             port=0,
@@ -24,6 +26,7 @@ class LCD:
         self.__st7735.begin()
         self.__width = self.__st7735.width
         self.__height = self.__st7735.height
+        self.__st7735.set_backlight(backlight)
         # Set up drawing canvas and font
         self.__image = Image.new('RGB', (self.__width, self.__height),
                                  color=(0, 0, 0))
