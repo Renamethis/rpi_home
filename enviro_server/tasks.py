@@ -26,9 +26,9 @@ if(os.getenv("UNITTEST_ENVIRONMENT") is None):
 def initialize(sender, **k):
     with app.app_context():
         app.interface = EnvironmentThread(redis_client)
-        app.matrix = MatrixThread()
         app.interface.start()
-        # app.matrix.start()
+        app.matrix = MatrixThread()
+        app.matrix.start()
         if(not EnvironmentUnitModel.query.first()):
             for unit in Units:
                 new_entry = EnvironmentUnitModel(
