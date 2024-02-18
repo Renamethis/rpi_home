@@ -82,7 +82,5 @@ def last_entries(args):
     with app.app_context():
         last_entries = EnvironmentRecordModel.query \
             .order_by(EnvironmentRecordModel.ptime.desc())
-        with open("data_transform_resource.json", "w") as file:
-            dump([entry.to_dict() for entry in last_entries], file, indent=4, sort_keys=True, default=str)
         startSlice, endSlice, amount = calculate_slices(args, last_entries.count())
         return transform_data(last_entries.slice(startSlice, endSlice), amount)
