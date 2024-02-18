@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 jobs:
-  run:
+  unit-testing:
 
     runs-on: ubuntu-latest
 
@@ -23,11 +23,18 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: "3.9"
-    - name: dependencies
+    - name: virtualenv
       run: |
         python -m pip install --upgrade pip
         pip install pipenv
+    - name: git
+      run: |
+        git fetch && git pull origin ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}} --rebase
+    - name: sync
+      run: |
         pipenv sync
+    - name: lfs
+      run: |
         git lfs fetch && git lfs pull
     - name: unittests
       run: |

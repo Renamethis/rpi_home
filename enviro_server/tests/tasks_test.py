@@ -35,6 +35,7 @@ def test_by_date():
     for key in result:
         __test_record(key, result[key])
 
+@pytest.mark.skip(reason="Not implemented")
 def test_update_data_from_sensors():
     raise NotImplementedError
 
