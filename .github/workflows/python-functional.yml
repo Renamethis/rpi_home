@@ -22,7 +22,7 @@ jobs:
           pip install pipenv
       - name: git
         run: |
-          git fetch && git pull
+          git fetch && git pull --rebase
       - name: sync
         run: |
           pipenv sync
