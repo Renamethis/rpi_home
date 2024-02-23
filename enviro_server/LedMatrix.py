@@ -46,12 +46,12 @@ class MatrixThread(Thread):
     def __init_buttons(self):
         button_a = Button(5)
         button_b = Button(6)
-        button_x = Button(16)
+        # button_x = Button(16)
         button_y = Button(24)
         try:
             button_a.when_pressed = self.__button_callback
             button_b.when_pressed = self.__button_callback
-            button_x.when_pressed = self.__button_callback
+            # button_x.when_pressed = self.__button_callback
             button_y.when_pressed = self.__button_callback
         except KeyboardInterrupt:
             button_a.close()
