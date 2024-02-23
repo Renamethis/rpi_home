@@ -1,7 +1,6 @@
+import os
 from .extensions import celery, db, redis_client
 from . import create_app
-from celery.signals import task_prerun
-import os
 from celery.signals import worker_ready
 from .EnvironmentData import Units, EnvironmentData
 from .database.models import EnvironmentUnitModel, EnvironmentRecordModel
@@ -9,7 +8,8 @@ from .transform_utils import transform_data, calculate_slices
 from celery.utils.log import get_task_logger
 from .EnvironmentThread import EnvironmentThread
 from .LedMatrix import MatrixThread
-from json import dump
+from requests import get
+from requests.exceptions import Timeout, HTTPError, ConnectionError, RequestException
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 if(os.getenv("UNITTEST_ENVIRONMENT") is None):
@@ -84,3 +84,13 @@ def last_entries(args):
             .order_by(EnvironmentRecordModel.ptime.desc())
         startSlice, endSlice, amount = calculate_slices(args, last_entries.count())
         return transform_data(last_entries.slice(startSlice, endSlice), amount)
+
+@celery.task
+def load_weather(args):
+    url = os.getenv("WEATHER_API_URL") + "?lat=" + args[0] + "&lon=" + args[1] + "&appid=" + os.getenv("WEATHER_API_KEY")
+    try:
+        return get(url).json(), 200
+    except Exception as e:
+        return {
+            "Error": str(e)
+        }, e.response.status_code
