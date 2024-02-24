@@ -1,3 +1,5 @@
+[![unittests](https://github.com/Renamethis/rpi_home/actions/workflows/python-unit.yml/badge.svg?branch=master)](https://github.com/Renamethis/rpi_home/actions/workflows/python-unit.yml)
+[![functional](https://github.com/Renamethis/rpi_home/actions/workflows/python-functional.yml/badge.svg?branch=master)](https://github.com/Renamethis/rpi_home/actions/workflows/python-functional.yml)
 # Raspberry PI home
 
 It's currently monolithic, but extendable web-service for weather monitoring(weather station), displaying weather and other infromation and controlling smart-home devices(not implemented).
