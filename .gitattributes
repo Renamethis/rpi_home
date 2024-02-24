@@ -1,1 +1,2 @@
-enviro_server/tests/resources/ filter=lfs diff=lfs merge=lfs -text
+enviro_server/tests/resources/data_transform_resource.json filter=lfs diff=lfs merge=lfs -text
+*.png filter=lfs diff=lfs merge=lfs -text
