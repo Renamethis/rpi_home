@@ -12,9 +12,10 @@ from gpiozero import Button
 
 
 class MatrixThread(Thread):
-    def __init__(self):
+    def __init__(self, bothSides):
         super().__init__()
         self.rotation = 0
+        self.__bothSides = bothSides
         critical_section(spi_lock, self.__init_unicornhat)
         self.font = ImageFont.truetype(str(pathlib.Path().resolve() / "resources/5x7.ttf"), 8)
         self.__time_offset = 0
@@ -63,7 +64,8 @@ class MatrixThread(Thread):
         pin = button.pin.number
 
     def __init_unicornhat(self):
-        self.unicornhatmini = UnicornHATMini(spi_max_speed_hz=6000)
+        self.unicornhatmini = UnicornHATMini(bothSectors=self.__bothSides, spi_max_speed_hz=6000)
+        self.unicornhatmini.clear()
         self.unicornhatmini.set_rotation(self.rotation)
         self.unicornhatmini.set_brightness(0.1)
         self.display_width, self.display_height = self.unicornhatmini.get_shape()

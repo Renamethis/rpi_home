@@ -22,4 +22,5 @@ def get_current_indicators():
 @app.route("/load_weather/<lattitude>/<longitude>", methods=["GET"])
 @cross_origin(origin='*')
 def get_current_weather(lattitude, longitude):
-    return load_weather.delay([lattitude, longitude, ]).get()
+    result = load_weather.delay([lattitude, longitude, ]).get()
+    return result[0], int(result[1])

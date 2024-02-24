@@ -9,7 +9,6 @@ from celery.utils.log import get_task_logger
 from .EnvironmentThread import EnvironmentThread
 from .LedMatrix import MatrixThread
 from requests import get
-from requests.exceptions import Timeout, HTTPError, ConnectionError, RequestException
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 if(os.getenv("UNITTEST_ENVIRONMENT") is None):
@@ -27,7 +26,7 @@ def initialize(sender, **k):
     with app.app_context():
         app.interface = EnvironmentThread(redis_client)
         app.interface.start()
-        app.matrix = MatrixThread()
+        app.matrix = MatrixThread(not bool(app.app_config['Devices']['matrix_with_lcd']))
         app.matrix.start()
         if(not EnvironmentUnitModel.query.first()):
             for unit in Units:
@@ -93,4 +92,4 @@ def load_weather(args):
     except Exception as e:
         return {
             "Error": str(e)
-        }, e.response.status_code
+        }, e.status_code
