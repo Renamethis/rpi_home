@@ -6,7 +6,7 @@ import pathlib
 from threading import Thread
 from colorsys import hsv_to_rgb
 from PIL import Image, ImageDraw, ImageFont
-from unicornhatmini import UnicornHATMini
+from unicornhatmini_fork import UnicornHATMini
 from .EnvironmentThread import spi_lock, critical_section
 from gpiozero import Button
 
