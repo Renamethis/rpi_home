@@ -6,27 +6,59 @@ import pathlib
 from threading import Thread
 from colorsys import hsv_to_rgb
 from PIL import Image, ImageDraw, ImageFont
-from unicornhatmini_fork import UnicornHATMini
-from .EnvironmentThread import spi_lock, critical_section
+from unicornhatmini_fork import UnicornHATMini, BUTTON_A, BUTTON_B, BUTTON_X, BUTTON_Y
 from gpiozero import Button
+from enviro_server.unicornhatclock.weather_view import WeatherView
+from enviro_server.unicornhatclock.options import led_options
 
+MODE_COUNT = 2
+
+TIME_MODE = 0
+WEATHER_MODE = 1
+UNICORN_MODE = 2
 
 class MatrixThread(Thread):
     def __init__(self, bothSides):
         super().__init__()
         self.rotation = 0
         self.__bothSides = bothSides
-        critical_section(spi_lock, self.__init_unicornhat)
+        self.__init_unicornhat()
         self.font = ImageFont.truetype(str(pathlib.Path().resolve() / "resources/5x7.ttf"), 8)
         self.__time_offset = 0
         self.__animation_fps = 30
         self.__init_buttons()
+        self.__weather_view.setup()
+        self.__mode = 0
 
     def run(self):
+        time_behind = 0
+        time_behind_max = 0.5
+        secs_per_frame = 1 / led_options.get('fps', 10)
         while True:
-            self.time_animation()
-            critical_section(spi_lock, self.unicornhatmini.show)
-            time.sleep(1/self.__animation_fps)
+            loop_start_time = time.time()
+            if(self.__mode == WEATHER_MODE):
+                self.time_animation()
+                self.unicornhatmini.show()
+            elif(self.__mode == TIME_MODE):
+                self.weather_animation()
+
+            # loop_finish_time = time.time()
+            # loop_duration = loop_finish_time - loop_start_time
+            # sleep_duration = secs_per_frame - loop_duration
+
+            # # Ensure consistent frame rate
+            # if sleep_duration >= time_behind:
+            #     sleep_duration -= time_behind
+            #     time_behind = 0
+            # else:
+            #     time_behind -= sleep_duration
+            #     time_behind = min(time_behind, time_behind_max)
+            #     sleep_duration = 0
+
+            time.sleep(0.1)
+
+    def weather_animation(self):
+        self.__weather_view.draw()
 
     def time_animation(self):
         current_time = time.strftime("%H:%M", time.gmtime())
@@ -36,19 +68,19 @@ class MatrixThread(Thread):
                 hue = (time.time() / 10.0) + (x / float(self.display_width * 2))
                 r, g, b = [int(c * 255) for c in hsv_to_rgb(hue, 1.0, 1.0)]
                 if image.getpixel((x + self.__time_offset, y)) == 255:
-                    critical_section(spi_lock, self.unicornhatmini.set_pixel, (x, y, r, g, b))
+                    self.unicornhatmini.set_pixel(x, y, r, g, b)
                 else:
-                    critical_section(spi_lock, self.unicornhatmini.set_pixel, (x, y, 0, 0, 0))
+                    self.unicornhatmini.set_pixel(x, y, 0, 0, 0)
 
         self.__time_offset += 1
         if self.__time_offset + self.display_width > image.size[0]:
             self.__time_offset = 0
 
     def __init_buttons(self):
-        button_a = Button(5)
-        button_b = Button(6)
-        # button_x = Button(16)
-        button_y = Button(24)
+        button_a = Button(BUTTON_A)
+        button_b = Button(BUTTON_B)
+        # button_x = Button(BUTTON_X)
+        button_y = Button(BUTTON_Y)
         try:
             button_a.when_pressed = self.__button_callback
             button_b.when_pressed = self.__button_callback
@@ -57,11 +89,16 @@ class MatrixThread(Thread):
         except KeyboardInterrupt:
             button_a.close()
             button_b.close()
-            button_x.close()
+            # button_x.close()
             button_y.close()
 
     def __button_callback(self, button):
         pin = button.pin.number
+        if(pin == 5):
+            self.__mode = 0 if self.__mode == MODE_COUNT else self.__mode + 1
+            if(self.__mode == WEATHER_MODE):
+                self.__weather_view.setup()
+        time.sleep(0.1)
 
     def __init_unicornhat(self):
         self.unicornhatmini = UnicornHATMini(bothSectors=self.__bothSides, spi_max_speed_hz=6000)
@@ -69,6 +106,7 @@ class MatrixThread(Thread):
         self.unicornhatmini.set_rotation(self.rotation)
         self.unicornhatmini.set_brightness(0.1)
         self.display_width, self.display_height = self.unicornhatmini.get_shape()
+        self.__weather_view = WeatherView(self.unicornhatmini, self.display_width, self.display_height)
 
     def __draw_text(self, text):
         text_width, text_height = self.font.getsize(text)
