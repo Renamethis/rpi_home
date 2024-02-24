@@ -7,6 +7,7 @@ import spidev
 
 from colorsys import hsv_to_rgb
 
+
 import RPi.GPIO as GPIO
 
 __version__ = '0.0.2'
@@ -44,9 +45,9 @@ class UnicornHATMini():
         self.disp = [[0, 0, 0] for _ in range(_COLS * _ROWS)]
         self.bothSectors = bothSectors
         self.sectors = []
-        self.sectors.append((spidev.SpiDev(0, int(not self.bothSectors)), 8, 0))
+        self.sectors.append((spidev.SpiDev(0, 0), 8, 0))
         if(self.bothSectors):
-            self.sectors.append((spidev.SpiDev(0, 1), 7, 28 * 8))
+           self.sectors.append((spidev.SpiDev(0, 1), 7, 28 * 8))
 
         GPIO.setwarnings(False)
         GPIO.setmode(GPIO.BCM)
