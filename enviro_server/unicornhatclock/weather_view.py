@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import datetime
+from json import loads
 from enviro_server.unicornhatclock.sprite_cache import cache, import_sprite
 from enviro_server.unicornhatclock.led import Led
 from enviro_server.unicornhatclock.weather import get_code
@@ -88,7 +89,7 @@ COLOR = clock_options.get('color', [255, 255, 255])
 filters = [('multiply', COLOR)]
 
 class WeatherView:
-    def __init__(self, unicornhat, width, height):
+    def __init__(self, unicornhat, width, height, redis_client):
         self.led = Led(unicornhat, width, height)
         digits_path = os.path.join('enviro_server', 'unicornhatclock', 'sprites', 'digits.png')
         import_sprite(digits_path, (3, 5), 1)
@@ -99,6 +100,8 @@ class WeatherView:
         for filename in sprites_list:
             sprite_path = os.path.join(sprites_path, filename)
             import_sprite(sprite_path, (9, 9))
+        self.redis_client = redis_client
+        self.__weather = None
 
     def setup(self):
         self.led.setup()
@@ -137,17 +140,20 @@ class WeatherView:
         #     sprite_index = int((time.time() / 5) % len(cache.keys()))
         #     sprite_name = list(cache.keys())[sprite_index]
         # else:
-        sprite_name = code_to_sprite.get(4, None)#get_code(), None)
+        weather = self.redis_client.lrange('Weather', -1, -1)
+        if(len(weather)):
+            self.__weather = loads(weather[0].replace(b'\'', b'\"'))
+        if(len(self.__weather)):
+            sprite_name = self.__weather["current"]["weather"][0]["icon"]
+            weather_sprite = cache.get(sprite_name, None)
+            if weather_sprite is None:
+                return
 
-        weather_sprite = cache.get(sprite_name, None)
-        if weather_sprite is None:
-            return
+            # Get frame
+            ticks = int(time.time() * frame_rate.get(sprite_name, 1))
+            frame_index = ticks % len(weather_sprite)
 
-        # Get frame
-        ticks = int(time.time() * frame_rate.get(sprite_name, 1))
-        frame_index = ticks % len(weather_sprite)
-
-        self.led.draw_frame(mirror(weather_sprite[frame_index]), 0, 0)
+            self.led.draw_frame(mirror(weather_sprite[frame_index]), 0, 0)
 
 
     # def draw_blinker():
