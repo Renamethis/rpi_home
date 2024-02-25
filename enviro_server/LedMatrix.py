@@ -18,10 +18,11 @@ WEATHER_MODE = 1
 UNICORN_MODE = 2
 
 class MatrixThread(Thread):
-    def __init__(self, bothSides):
+    def __init__(self, bothSides, redis_client):
         super().__init__()
         self.rotation = 0
         self.__bothSides = bothSides
+        self.redis_client = redis_client
         self.__init_unicornhat()
         self.font = ImageFont.truetype(str(pathlib.Path().resolve() / "resources/5x7.ttf"), 8)
         self.__time_offset = 0
@@ -106,7 +107,7 @@ class MatrixThread(Thread):
         self.unicornhatmini.set_rotation(self.rotation)
         self.unicornhatmini.set_brightness(0.1)
         self.display_width, self.display_height = self.unicornhatmini.get_shape()
-        self.__weather_view = WeatherView(self.unicornhatmini, self.display_width, self.display_height)
+        self.__weather_view = WeatherView(self.unicornhatmini, self.display_width, self.display_height, self.redis_client)
 
     def __draw_text(self, text):
         text_width, text_height = self.font.getsize(text)

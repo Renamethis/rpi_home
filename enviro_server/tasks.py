@@ -1,6 +1,7 @@
 import os
 from .extensions import celery, db, redis_client
 from . import create_app
+from flask import jsonify
 from celery.signals import worker_ready
 from .EnvironmentData import Units, EnvironmentData
 from .database.models import EnvironmentUnitModel, EnvironmentRecordModel
@@ -15,7 +16,11 @@ if(os.getenv("UNITTEST_ENVIRONMENT") is None):
     celery.conf.beat_schedule = {
         'update_task': {
             'task': 'enviro_server.tasks.update_data_from_sensors',
-            'schedule': 30.0,
+            'schedule': 600.0,
+        },
+        'weather_task': {
+            'task': 'enviro_server.tasks.load_weather',
+            'schedule': 100.0,
         },
     }
     celery.conf.timezone = 'UTC'
@@ -24,10 +29,10 @@ if(os.getenv("UNITTEST_ENVIRONMENT") is None):
 @worker_ready.connect
 def initialize(sender, **k):
     with app.app_context():
+        app.matrix = MatrixThread(not bool(app.app_config['Devices']['matrix_with_lcd']), redis_client)
+        app.matrix.start()
         app.interface = EnvironmentThread(redis_client)
         app.interface.start()
-        app.matrix = MatrixThread(not bool(app.app_config['Devices']['matrix_with_lcd']))
-        app.matrix.start()
         if(not EnvironmentUnitModel.query.first()):
             for unit in Units:
                 new_entry = EnvironmentUnitModel(
@@ -88,7 +93,9 @@ def last_entries(args):
 def load_weather(args):
     url = os.getenv("WEATHER_API_URL") + "?lat=" + args[0] + "&lon=" + args[1] + "&appid=" + os.getenv("WEATHER_API_KEY")
     try:
-        return get(url).json(), 200
+        response = get(url)
+        redis_client.rpush('Weather', response.content)
+        return response.content, 200
     except Exception as e:
         return {
             "Error": str(e)
