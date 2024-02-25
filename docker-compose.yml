@@ -14,7 +14,7 @@ services:
     environment:
       - FLASK_APP=rpi_home.py
       - DEV_DATABASE_URL=postgresql://root:secret@localhost:5432/rpi
-  
+
   beat:
     build: .
     container_name: 'celery-beat'
@@ -26,7 +26,7 @@ services:
     environment:
       - FLASK_APP=rpi_home.py
       - DEV_DATABASE_URL=postgresql://root:secret@localhost:5432/rpi
-  
+
   worker:
     build: .
     container_name: 'celery-worker'

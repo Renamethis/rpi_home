@@ -15,51 +15,6 @@ def mirror(seq):
     output = list(seq[::-1])
     return output
 
-code_to_sprite = {
-    -1: 'disconnected',
-    0: 'loading',
-    1: 'sun',
-    2: 'sun',
-    3: 'sun and cloud',
-    4: 'sun and cloud',
-    5: 'sun and haze',
-    6: 'clouds',
-    7: 'clouds',
-    8: 'clouds',
-    11: 'fog',
-    12: 'rain',
-    13: 'rain and cloud',
-    14: 'rain and cloud',
-    15: 'storm',
-    16: 'storm',
-    17: 'storm',
-    18: 'rain and cloud',
-    19: 'snow',
-    20: 'snow and cloud',
-    21: 'snow and cloud',
-    22: 'snow',
-    23: 'snow and cloud',
-    24: 'snow',
-    25: 'snow',
-    26: 'snow',
-    29: 'snow',
-    30: 'hot',
-    31: 'cold',
-    32: 'wind',
-    33: 'moon',
-    34: 'moon',
-    35: 'moon and cloud',
-    36: 'moon and cloud',
-    37: 'moon and haze',
-    38: 'moon and cloud',
-    39: 'rain and cloud',
-    40: 'rain and cloud',
-    41: 'storm',
-    42: 'storm',
-    43: 'snow',
-    44: 'snow',
-}
-
 frame_rate = {
     'disconnected': 1,
     'loading': 10,
@@ -123,15 +78,15 @@ class WeatherView:
 
         # Draw hour digits
         hour_x_offset = 0
-        # if not (OMIT_LEADING_ZERO and int(hour_str[0]) == 0):
-        #     self.led.draw_frame(mirror(cache['digits'][int(hour_str[0])]),
-        #                 0 + hour_x_offset, 12, filters)
-        self.led.draw_frame(cache['digits'][int(hour_str[1])],
-                2 + hour_x_offset, 6, filters)
+        if not (OMIT_LEADING_ZERO and int(hour_str[0]) == 0):
+            self.led.draw_frame(mirror(cache['digits'][int(hour_str[0])]),
+                        0 + hour_x_offset, 0, filters)
+        self.led.draw_frame(mirror(cache['digits'][int(hour_str[1])]),
+                2 + hour_x_offset, 0, filters)
 
         # # # Draw minute digits
-        # self.led.draw_frame(mirror(cache['digits'][int(minute_str[0])]), 0, 6, filters)
-        # self.led.draw_frame(mirror(cache['digits'][int(minute_str[1])]), 4, 6, filters)
+        self.led.draw_frame(mirror(cache['digits'][int(minute_str[0])]), 4, 0, filters)
+        self.led.draw_frame(mirror(cache['digits'][int(minute_str[1])]), 6, 0, filters)
 
 
     def draw_weather(self):

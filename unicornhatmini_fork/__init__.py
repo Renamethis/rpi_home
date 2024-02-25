@@ -156,8 +156,8 @@ class UnicornHATMini():
         if self._rotation in [90, 270]:
             if(self.bothSectors):
                 return _ROWS, _COLS
-            return int(_ROWS/2) - 1, _COLS
+            return int(_ROWS/2), _COLS
         else:
             if(self.bothSectors):
                 return _COLS, _ROWS
-            return int(_COLS/2) - 1, _ROWS
+            return int(_COLS/2), _ROWS

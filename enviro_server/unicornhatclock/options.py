@@ -1,5 +1,4 @@
 import os
-import sys
 from json import loads
 
 options = {}
@@ -14,7 +13,7 @@ def load_options():
     global options
     global clock_options, led_options, weather_options, sunrise_options
 
-    options_path = os.path.join(sys.path[0], 'enviro_server/unicornhatclock/options.json')
+    options_path = os.path.join(os.getcwd(), 'enviro_server/unicornhatclock/options.json')
     with open(options_path, 'r') as options_file:
         options = loads(options_file.read())
 

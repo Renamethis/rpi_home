@@ -37,10 +37,10 @@ class MatrixThread(Thread):
         secs_per_frame = 1 / led_options.get('fps', 10)
         while True:
             loop_start_time = time.time()
-            if(self.__mode == WEATHER_MODE):
+            if(self.__mode == TIME_MODE):
                 self.time_animation()
                 self.unicornhatmini.show()
-            elif(self.__mode == TIME_MODE):
+            elif(self.__mode == WEATHER_MODE):
                 self.weather_animation()
 
             # loop_finish_time = time.time()
@@ -96,7 +96,7 @@ class MatrixThread(Thread):
     def __button_callback(self, button):
         pin = button.pin.number
         if(pin == 5):
-            self.__mode = 0 if self.__mode == MODE_COUNT else self.__mode + 1
+            self.__mode = 0 if self.__mode + 1 == MODE_COUNT else self.__mode + 1
             if(self.__mode == WEATHER_MODE):
                 self.__weather_view.setup()
         time.sleep(0.1)
