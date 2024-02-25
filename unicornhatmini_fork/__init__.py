@@ -154,19 +154,10 @@ class UnicornHATMini():
 
     def get_shape(self):
         if self._rotation in [90, 270]:
-            return _ROWS, _COLS
+            if(self.bothSectors):
+                return _ROWS, _COLS
+            return int(_ROWS/2) - 1, _COLS
         else:
-            return _COLS, _ROWS
-
-
-if __name__ == "__main__":
-    unicornhatmini = UnicornHATMini()
-
-    while True:
-        for y in range(_ROWS):
-            for x in range(_COLS):
-                hue = (time.time() / 4.0) + (x / float(_COLS * 2)) + (y / float(_ROWS))
-                r, g, b = [int(c * 255) for c in hsv_to_rgb(hue, 1.0, 1.0)]
-                unicornhatmini.set_pixel(x, y, r, g, b)
-        unicornhatmini.show()
-        time.sleep(1.0 / 60)
+            if(self.bothSectors):
+                return _COLS, _ROWS
+            return int(_COLS/2) - 1, _ROWS

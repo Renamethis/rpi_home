@@ -1,0 +1,26 @@
+{
+    "clock": {
+        "12hrFormat": true,
+        "demo": false,
+        "omitLeadingZeros": true,
+        "color": [255, 255, 255]
+    },
+    "led": {
+        "fps": 10,
+        "minBrightness": 0.03,
+        "maxBrightness": 0.5,
+        "rotation": 90
+    },
+    "weather": {
+        "enabled": true,
+        "apiKey": "",
+        "locationKey": "",
+        "updateInterval": 1800
+    },
+    "sunrise": {
+        "enabled": true,
+        "latitude": 0,
+        "longitude": 0,
+        "updateInterval": 86400
+    }
+}

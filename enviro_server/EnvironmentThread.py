@@ -14,18 +14,6 @@ from bme280 import BME280
 from enviroplus import gas
 from datetime import datetime
 
-spi_lock = Lock()
-
-def critical_section(lock, routine, args=None):
-    while(not lock.acquire(blocking=True)):
-        pass
-    if(args is not None):
-        result = routine(*args)
-    else:
-        result = routine()
-    lock.release()
-    return result
-
 class EnvironmentThread(Thread):
 
     FACTOR = 2.25
@@ -44,7 +32,7 @@ class EnvironmentThread(Thread):
 
     def run(self):
         while(self.__is_running):
-            critical_section(spi_lock, self.__build_environment_data)
+            self.__build_environment_data()
             self.__client.rpush('Data', self.__data.serialize())
             sleep(1)
 
