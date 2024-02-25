@@ -38,7 +38,40 @@ This is the simple view which basically displaying current weather taken from th
 Android TV app it's separated project, but it's also integrating with the raspberry pi home. Currently it's only displaying different weather indicators.
 
 ## Set up
+To set-up collect required dependencies and run celery worker, beat and flask server. Optionally, you can run frontend.
+
+Set-up virtualenv:
+
+```bash
+pipenv sync
+```
+
+Run celery-worker:
+
+```bash
+celery -A enviro_server.celery worker --loglevel=info
+```
+
+Run flask server:
+
+```bash
+flask run --host=0.0.0.0
+```
 
 ## Deploy
+You can also deploy it using docker-compose.
+Just run
+```bash
+docker-compose up
+```
 
 ## Tests
+
+There is two different test suites:
+- unittests
+
+  This test suite mostly aimed to handle any issues with basic data structures and it's serialization, transforming.
+
+- functional
+
+  This test suite aimed to test all of the provided celery tasks.
