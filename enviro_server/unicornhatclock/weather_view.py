@@ -3,6 +3,7 @@ import sys
 import time
 import datetime
 from json import loads
+from threading import Timer
 from enviro_server.unicornhatclock.sprite_cache import cache, import_sprite
 from enviro_server.unicornhatclock.led import Led
 from enviro_server.unicornhatclock.weather import get_code
@@ -48,6 +49,7 @@ class WeatherView:
         self.led = Led(unicornhat, width, height)
         digits_path = os.path.join('enviro_server', 'unicornhatclock', 'sprites', 'digits.png')
         import_sprite(digits_path, (3, 5), 1)
+        self.__state = False
 
         sprites_path = os.path.join('enviro_server', 'unicornhatclock', 'sprites', 'weather_icons')
         sprites_list = os.listdir(sprites_path)
@@ -57,15 +59,20 @@ class WeatherView:
             import_sprite(sprite_path, (9, 9))
         self.redis_client = redis_client
         self.__weather = None
+        self.__timer = Timer(7.0, self.timer_callback)
 
     def setup(self):
         self.led.setup()
+        self.__timer.start()
+
+    def timer_callback(self):
+        self.__state = not self.__state
+        self.__timer = Timer(7.0, self.timer_callback)
+        self.__timer.start()
 
     def draw_time(self):
-
         now = get_time()
         hour, minute = now.hour, now.minute
-
         if TWELVE_HR_FORMAT:
             twelve_hour = hour % 12
             if twelve_hour == 0:
@@ -82,11 +89,11 @@ class WeatherView:
             self.led.draw_frame(mirror(cache['digits'][int(hour_str[0])]),
                         0 + hour_x_offset, 0, filters)
         self.led.draw_frame(mirror(cache['digits'][int(hour_str[1])]),
-                2 + hour_x_offset, 0, filters)
+                3 + hour_x_offset, 0, filters)
 
-        # # # Draw minute digits
-        self.led.draw_frame(mirror(cache['digits'][int(minute_str[0])]), 4, 0, filters)
-        self.led.draw_frame(mirror(cache['digits'][int(minute_str[1])]), 6, 0, filters)
+        # # # # Draw minute digits
+        # self.led.draw_frame(mirror(cache['digits'][int(minute_str[0])]), 4, 0, filters)
+        # self.led.draw_frame(mirror(cache['digits'][int(minute_str[1])]), 6, 0, filters)
 
 
     def draw_weather(self):
@@ -123,6 +130,9 @@ class WeatherView:
 
 
     def draw(self):
-        self.led.draw_function(self.draw_weather)
+        if(not self.__state):
+            self.led.draw_function(self.draw_weather)
+        else:
+            self.led.draw_function(self.draw_time)
         # self.draw_weather()
         # draw_blinker()
