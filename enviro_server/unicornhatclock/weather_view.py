@@ -50,6 +50,7 @@ class WeatherView:
         digits_path = os.path.join('enviro_server', 'unicornhatclock', 'sprites', 'digits.png')
         import_sprite(digits_path, (3, 5), 1)
         self.__state = False
+        self.__clock_state = False
 
         sprites_path = os.path.join('enviro_server', 'unicornhatclock', 'sprites', 'weather_icons')
         sprites_list = os.listdir(sprites_path)
@@ -59,16 +60,25 @@ class WeatherView:
             import_sprite(sprite_path, (9, 9))
         self.redis_client = redis_client
         self.__weather = None
-        self.__timer = Timer(7.0, self.timer_callback)
+        self.__timer = Timer(10.0, self.timer_callback)
+        self.__clock_timer = Timer(5.0, self.clock_callback)
 
     def setup(self):
         self.led.setup()
         self.__timer.start()
 
     def timer_callback(self):
+        self.__clock_timer.cancel()
         self.__state = not self.__state
-        self.__timer = Timer(7.0, self.timer_callback)
+        self.__timer = Timer(10.0, self.timer_callback)
         self.__timer.start()
+        self.__clock_timer = Timer(5.0, self.clock_callback)
+        self.__clock_timer.start()
+
+    def clock_callback(self):
+        self.__clock_state = not self.__clock_state
+        self.__clock_timer = Timer(5.0, self.clock_callback)
+        self.__clock_timer.start()
 
     def draw_time(self):
         now = get_time()
@@ -85,15 +95,16 @@ class WeatherView:
 
         # Draw hour digits
         hour_x_offset = 0
-        if not (OMIT_LEADING_ZERO and int(hour_str[0]) == 0):
-            self.led.draw_frame(mirror(cache['digits'][int(hour_str[0])]),
-                        0 + hour_x_offset, 0, filters)
-        self.led.draw_frame(mirror(cache['digits'][int(hour_str[1])]),
-                3 + hour_x_offset, 0, filters)
-
-        # # # # Draw minute digits
-        # self.led.draw_frame(mirror(cache['digits'][int(minute_str[0])]), 4, 0, filters)
-        # self.led.draw_frame(mirror(cache['digits'][int(minute_str[1])]), 6, 0, filters)
+        if(not self.__clock_state):
+            if not (OMIT_LEADING_ZERO and int(hour_str[0]) == 0):
+                self.led.draw_frame(mirror(cache['digits'][int(hour_str[0])]),
+                            0 + hour_x_offset, 0, filters)
+            self.led.draw_frame(mirror(cache['digits'][int(hour_str[1])]),
+                    4 + hour_x_offset, 0, filters)
+        else:
+            # # # # Draw minute digits
+            self.led.draw_frame(mirror(cache['digits'][int(minute_str[0])]), 0, 0, filters)
+            self.led.draw_frame(mirror(cache['digits'][int(minute_str[1])]), 4, 0, filters)
 
 
     def draw_weather(self):
