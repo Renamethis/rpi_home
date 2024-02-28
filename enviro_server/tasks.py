@@ -93,9 +93,10 @@ def last_entries(args):
 def load_weather(args):
     url = os.getenv("WEATHER_API_URL") + "?lat=" + args[0] + "&lon=" + args[1] + "&appid=" + os.getenv("WEATHER_API_KEY")
     try:
+        print(url)
         response = get(url)
         redis_client.rpush('Weather', response.content)
-        return response.content, 200
+        return response.json(), 200
     except Exception as e:
         return {
             "Error": str(e)
