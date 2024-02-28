@@ -4,7 +4,7 @@ import pytest
 import logging
 from datetime import datetime
 from unittest.mock import patch
-from enviro_server.tasks import last_entries, current_state, by_date
+from enviro_server.tasks import last_entries, current_state, by_date, load_weather
 from enviro_server.EnvironmentData import CHANNELS, Units, Limits
 
 LOGGER = logging.getLogger(__name__)
@@ -42,6 +42,10 @@ def test_update_data_from_sensors():
 def test_last_entries():
     for test_set in last_entries_test_set:
         __test_last_entries(test_set[0], test_set[1])
+
+def test_load_weather(): # TODO: Test Redis
+    weather = load_weather.delay(("55.6961287", "37.5604322")).get()[0]
+    assert weather["timezone"] == "Europe/Moscow"
 
 def __test_record(key, value, precise=False):
     assert key is not None
