@@ -5,7 +5,7 @@ import pathlib
 
 from threading import Thread
 from colorsys import hsv_to_rgb
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 from unicornhatmini_fork import UnicornHATMini, BUTTON_A, BUTTON_B, BUTTON_X, BUTTON_Y
 from gpiozero import Button
 from enviro_server.unicornhatclock.weather_view import WeatherView
@@ -68,7 +68,7 @@ class MatrixThread(Thread):
             for x in range(self.display_width):
                 hue = (time.time() / 10.0) + (x / float(self.display_width * 2))
                 r, g, b = [int(c * 255) for c in hsv_to_rgb(hue, 1.0, 1.0)]
-                if image.getpixel((x + self.__time_offset, y)) == 255:
+                if image.getpixel((x - self.__time_offset, y)) == 255:
                     self.unicornhatmini.set_pixel(x, y, r, g, b)
                 else:
                     self.unicornhatmini.set_pixel(x, y, 0, 0, 0)
@@ -114,4 +114,6 @@ class MatrixThread(Thread):
         image = Image.new('P', (text_width + self.display_width + self.display_width, self.display_height), 0)
         draw = ImageDraw.Draw(image)
         draw.text((self.display_width, -1), text, font=self.font, fill=255)
+        image = ImageOps.flip(image)
+        image = ImageOps.mirror(image)
         return image
