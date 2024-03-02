@@ -2,7 +2,7 @@
 import time
 import sys
 import pathlib
-
+import math
 from threading import Thread
 from colorsys import hsv_to_rgb
 from PIL import Image, ImageDraw, ImageFont, ImageOps
@@ -42,24 +42,27 @@ class MatrixThread(Thread):
                 self.unicornhatmini.show()
             elif(self.__mode == WEATHER_MODE):
                 self.weather_animation()
+            elif(self.__mode == UNICORN_MODE):
+                self.unicorn_animation()
 
-            # loop_finish_time = time.time()
-            # loop_duration = loop_finish_time - loop_start_time
-            # sleep_duration = secs_per_frame - loop_duration
-
-            # # Ensure consistent frame rate
-            # if sleep_duration >= time_behind:
-            #     sleep_duration -= time_behind
-            #     time_behind = 0
-            # else:
-            #     time_behind -= sleep_duration
-            #     time_behind = min(time_behind, time_behind_max)
-            #     sleep_duration = 0
-
-            time.sleep(0.1)
+            time.sleep(1/self.__unicorn_fps if self.__mode == UNICORN_MODE else 0.1)
 
     def weather_animation(self):
         self.__weather_view.draw()
+
+    def unicorn_animation(self):
+        self.__unicorn_step += 1
+        for x in range(0, self.display_width):
+            for y in range(0, self.display_height):
+                dx = (math.sin(self.__unicorn_step / self.display_width + 20) * self.display_height) + self.display_height
+                dy = (math.cos(self.__unicorn_step / self.display_height) * self.display_height) + self.display_height
+                sc = (math.cos(self.__unicorn_step / self.display_height) * self.display_height) + self.display_width
+
+                hue = math.sqrt(math.pow(x - dx, 2) + math.pow(y - dy, 2)) / sc
+                r, g, b = [int(c * 255) for c in hsv_to_rgb(hue, 1, 1)]
+
+                self.unicornhatmini.set_pixel(x, y, r, g, b)
+        self.unicornhatmini.show()
 
     def time_animation(self):
         current_time = time.strftime("%H:%M", time.gmtime())
