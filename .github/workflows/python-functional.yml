@@ -5,9 +5,9 @@ name: functional
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, "test/*", "feature/*" ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, "test/*", "feature/*" ]
 
 permissions:
   contents: read
@@ -24,7 +24,7 @@ jobs:
           pip install pipenv
       - name: git
         run: |
-          git fetch && git pull --rebase
+          git fetch && git checkout ${GITHUB_REF##*/} && git pull --rebase
       - name: sync
         run: |
           pipenv sync
