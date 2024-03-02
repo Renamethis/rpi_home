@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import time
 import sys
+import time
 import pathlib
 import math
 from threading import Thread
@@ -8,13 +8,13 @@ from colorsys import hsv_to_rgb
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 from unicornhatmini_fork import UnicornHATMini, BUTTON_A, BUTTON_B, BUTTON_X, BUTTON_Y
 from gpiozero import Button
-from enviro_server.unicornhatclock.weather_view import WeatherView
+from enviro_server.unicornhatclock.weather_view import WeatherView, get_time
 from enviro_server.unicornhatclock.options import led_options
 
-MODE_COUNT = 2
+MODE_COUNT = 3
 
-TIME_MODE = 0
-WEATHER_MODE = 1
+WEATHER_MODE = 0
+TIME_MODE = 1
 UNICORN_MODE = 2
 
 class MatrixThread(Thread):
@@ -26,7 +26,8 @@ class MatrixThread(Thread):
         self.__init_unicornhat()
         self.font = ImageFont.truetype(str(pathlib.Path().resolve() / "resources/5x7.ttf"), 8)
         self.__time_offset = 0
-        self.__animation_fps = 30
+        self.__unicorn_step = 0
+        self.__unicorn_fps = 30
         self.__init_buttons()
         self.__weather_view.setup()
         self.__mode = 0
@@ -65,10 +66,10 @@ class MatrixThread(Thread):
         self.unicornhatmini.show()
 
     def time_animation(self):
-        current_time = time.strftime("%H:%M", time.gmtime())
+        current_time = get_time(self.__weather_view.timezone).strftime("%H:%M")
         image = self.__draw_text(current_time)
-        for y in range(self.display_height):
-            for x in range(self.display_width):
+        for x in range(self.display_width):
+            for y in range(self.display_height):
                 hue = (time.time() / 10.0) + (x / float(self.display_width * 2))
                 r, g, b = [int(c * 255) for c in hsv_to_rgb(hue, 1.0, 1.0)]
                 if image.getpixel((x - self.__time_offset, y)) == 255:
