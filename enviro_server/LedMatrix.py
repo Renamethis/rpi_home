@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
-import time
 import sys
+import time
 import pathlib
-
+import math
 from threading import Thread
 from colorsys import hsv_to_rgb
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 from unicornhatmini_fork import UnicornHATMini, BUTTON_A, BUTTON_B, BUTTON_X, BUTTON_Y
 from gpiozero import Button
-from enviro_server.unicornhatclock.weather_view import WeatherView
+from enviro_server.unicornhatclock.weather_view import WeatherView, get_time
 from enviro_server.unicornhatclock.options import led_options
 
-MODE_COUNT = 2
+MODE_COUNT = 3
 
-TIME_MODE = 0
-WEATHER_MODE = 1
+WEATHER_MODE = 0
+TIME_MODE = 1
 UNICORN_MODE = 2
 
 class MatrixThread(Thread):
@@ -26,7 +26,8 @@ class MatrixThread(Thread):
         self.__init_unicornhat()
         self.font = ImageFont.truetype(str(pathlib.Path().resolve() / "resources/5x7.ttf"), 8)
         self.__time_offset = 0
-        self.__animation_fps = 30
+        self.__unicorn_step = 0
+        self.__unicorn_fps = 30
         self.__init_buttons()
         self.__weather_view.setup()
         self.__mode = 0
@@ -42,33 +43,36 @@ class MatrixThread(Thread):
                 self.unicornhatmini.show()
             elif(self.__mode == WEATHER_MODE):
                 self.weather_animation()
+            elif(self.__mode == UNICORN_MODE):
+                self.unicorn_animation()
 
-            # loop_finish_time = time.time()
-            # loop_duration = loop_finish_time - loop_start_time
-            # sleep_duration = secs_per_frame - loop_duration
-
-            # # Ensure consistent frame rate
-            # if sleep_duration >= time_behind:
-            #     sleep_duration -= time_behind
-            #     time_behind = 0
-            # else:
-            #     time_behind -= sleep_duration
-            #     time_behind = min(time_behind, time_behind_max)
-            #     sleep_duration = 0
-
-            time.sleep(0.1)
+            time.sleep(1/self.__unicorn_fps if self.__mode == UNICORN_MODE else 0.1)
 
     def weather_animation(self):
         self.__weather_view.draw()
 
+    def unicorn_animation(self):
+        self.__unicorn_step += 1
+        for x in range(0, self.display_width):
+            for y in range(0, self.display_height):
+                dx = (math.sin(self.__unicorn_step / self.display_width + 20) * self.display_height) + self.display_height
+                dy = (math.cos(self.__unicorn_step / self.display_height) * self.display_height) + self.display_height
+                sc = (math.cos(self.__unicorn_step / self.display_height) * self.display_height) + self.display_width
+
+                hue = math.sqrt(math.pow(x - dx, 2) + math.pow(y - dy, 2)) / sc
+                r, g, b = [int(c * 255) for c in hsv_to_rgb(hue, 1, 1)]
+
+                self.unicornhatmini.set_pixel(x, y, r, g, b)
+        self.unicornhatmini.show()
+
     def time_animation(self):
-        current_time = time.strftime("%H:%M", time.gmtime())
+        current_time = get_time(self.__weather_view.timezone).strftime("%H:%M")
         image = self.__draw_text(current_time)
-        for y in range(self.display_height):
-            for x in range(self.display_width):
+        for x in range(self.display_width):
+            for y in range(self.display_height):
                 hue = (time.time() / 10.0) + (x / float(self.display_width * 2))
                 r, g, b = [int(c * 255) for c in hsv_to_rgb(hue, 1.0, 1.0)]
-                if image.getpixel((x + self.__time_offset, y)) == 255:
+                if image.getpixel((x - self.__time_offset, y)) == 255:
                     self.unicornhatmini.set_pixel(x, y, r, g, b)
                 else:
                     self.unicornhatmini.set_pixel(x, y, 0, 0, 0)
@@ -114,4 +118,6 @@ class MatrixThread(Thread):
         image = Image.new('P', (text_width + self.display_width + self.display_width, self.display_height), 0)
         draw = ImageDraw.Draw(image)
         draw.text((self.display_width, -1), text, font=self.font, fill=255)
+        image = ImageOps.flip(image)
+        image = ImageOps.mirror(image)
         return image
