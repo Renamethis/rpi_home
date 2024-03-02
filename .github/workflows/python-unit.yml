@@ -5,9 +5,9 @@ name: unittests
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "*" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "*" ]
 
 permissions:
   contents: read
@@ -29,7 +29,7 @@ jobs:
         pip install pipenv
     - name: git
       run: |
-        git fetch && git pull origin ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}} --rebase
+        git fetch --all && git checkout ${GITHUB_REF#refs/heads/} && git pull origin ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}} --rebase
     - name: sync
       run: |
         pipenv sync
