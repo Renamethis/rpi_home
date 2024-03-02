@@ -15,6 +15,8 @@ permissions:
 jobs:
   functional-testing:
     runs-on: self-hosted
+    environment:
+      name: ${{ github.ref_name }}
     steps:
       - name: virtualenv
         run: |
