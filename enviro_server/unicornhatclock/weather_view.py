@@ -3,14 +3,14 @@ import sys
 import time
 import datetime
 from json import loads
+import pytz
 from threading import Timer
 from enviro_server.unicornhatclock.sprite_cache import cache, import_sprite
 from enviro_server.unicornhatclock.led import Led
-from enviro_server.unicornhatclock.weather import get_code
 from enviro_server.unicornhatclock.options import clock_options
 
-def get_time():
-    return datetime.datetime.now()
+def get_time(timezone):
+    return datetime.datetime.now(pytz.timezone(timezone))
 
 def mirror(seq):
     output = list(seq[::-1])
@@ -60,11 +60,15 @@ class WeatherView:
             import_sprite(sprite_path, (9, 9))
         self.redis_client = redis_client
         self.__weather = None
-        self.__timer = Timer(10.0, self.timer_callback)
         self.__clock_timer = Timer(5.0, self.clock_callback)
 
     def setup(self):
+        try:
+            self.__timer.cancel()
+        except:
+            pass
         self.led.setup()
+        self.__timer = Timer(10.0, self.timer_callback)
         self.__timer.start()
 
     def timer_callback(self):
@@ -81,7 +85,7 @@ class WeatherView:
         self.__clock_timer.start()
 
     def draw_time(self):
-        now = get_time()
+        now = get_time(self.timezone)
         hour, minute = now.hour, now.minute
         if TWELVE_HR_FORMAT:
             twelve_hour = hour % 12
@@ -108,14 +112,9 @@ class WeatherView:
 
 
     def draw_weather(self):
-        # Get sprite
-        # if (DEMO):
-        #     sprite_index = int((time.time() / 5) % len(cache.keys()))
-        #     sprite_name = list(cache.keys())[sprite_index]
-        # else:
         weather = self.redis_client.lrange('Weather', -1, -1)
         if(len(weather)):
-            self.__weather = loads(weather[0].replace(b'\'', b'\"'))
+            self.__weather = loads(weather[0].replace(b'\'', b'\"')) # TODO: Remove?
         if(len(self.__weather)):
             sprite_name = self.__weather["current"]["weather"][0]["icon"]
             weather_sprite = cache.get(sprite_name, None)
@@ -128,22 +127,12 @@ class WeatherView:
 
             self.led.draw_frame(mirror(weather_sprite[frame_index]), 0, 0)
 
-
-    # def draw_blinker():
-    #     ticks = get_time().second % 2 == 0
-    #     color = [0, 0, 0]
-    #     if ticks % 2 == 0:
-    #         if get_time_updated():
-    #             color = [128, 128, 128]
-    #         else:
-    #             color = [255, 0, 0] # red
-    #     # set_px(0, 15, color, filters)
-
-
     def draw(self):
         if(not self.__state):
             self.led.draw_function(self.draw_weather)
         else:
             self.led.draw_function(self.draw_time)
-        # self.draw_weather()
-        # draw_blinker()
+
+    @property
+    def timezone(self):
+        return self.__weather["timezone"]
