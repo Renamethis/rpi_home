@@ -5,9 +5,9 @@ name: functional
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ master ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ master ]
 
 permissions:
   contents: read
@@ -15,8 +15,6 @@ permissions:
 jobs:
   functional-testing:
     runs-on: self-hosted
-    environment:
-      name: ${GITHUB_REF##*/}
     steps:
       - name: virtualenv
         run: |
