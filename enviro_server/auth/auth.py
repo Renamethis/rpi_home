@@ -1,17 +1,12 @@
 from flask import Blueprint, request
-from enviro_server.extensions import db
-from enviro_server.auth.tasks import signup_task
+from enviro_server.auth.tasks import signup_task, login_task
 
 auth = Blueprint('auth', __name__)
 
 @auth.route('/login')
 def login():
-    return 'Login'
+    return login_task.delay((request, )).get()
 
 @auth.route('/signup', methods=['POST'])
 def signup():
-    return signup_task(request).delay().get()
-
-@auth.route('/logout')
-def logout():
-    return 'Logout'
+    return signup_task((request, )).delay().get()
