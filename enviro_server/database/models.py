@@ -26,3 +26,9 @@ class EnvironmentUnitModel(db.Model):
     type = db.Column(db.String(50), primary_key=True)
     unit = db.Column(db.String(10), nullable=False, unique=False)
     records = db.relationship('EnvironmentRecordModel', backref='environment_units', lazy=True)
+
+# User model
+class User(db.Model):
+    nickname = db.Column(db.String(50), primary_key=True)
+    full_name = db.Column(db.String(100))
+    password = db.Column(db.String(100))
