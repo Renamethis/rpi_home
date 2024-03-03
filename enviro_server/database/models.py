@@ -1,5 +1,6 @@
+import datetime
 from enviro_server.extensions import db
-
+from werkzeug.security import generate_password_hash
 # Record model
 class EnvironmentRecordModel(db.Model):
     __tablename__ = 'environment_record'
@@ -26,3 +27,17 @@ class EnvironmentUnitModel(db.Model):
     type = db.Column(db.String(50), primary_key=True)
     unit = db.Column(db.String(10), nullable=False, unique=False)
     records = db.relationship('EnvironmentRecordModel', backref='environment_units', lazy=True)
+
+# User model
+class User(db.Model):
+    nickname = db.Column(db.String(50), primary_key=True)
+    full_name = db.Column(db.String(100))
+    password = db.Column(db.String(100))
+    registered_on = db.Column(db.DateTime, nullable=False)
+    admin = db.Column(db.Boolean, nullable=False, default=False)
+
+    def __init__(self, nickname, password, admin=False):
+        self.nickname = nickname
+        self.password = generate_password_hash(password, method='sha256').decode()
+        self.registered_on = datetime.datetime.now()
+        self.admin = admin

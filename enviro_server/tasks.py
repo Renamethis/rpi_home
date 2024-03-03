@@ -1,6 +1,6 @@
 import os
 from .extensions import celery, db, redis_client
-from . import create_app
+from . import app
 from flask import jsonify
 from celery.signals import worker_ready
 from .EnvironmentData import Units, EnvironmentData
@@ -11,7 +11,6 @@ from .EnvironmentThread import EnvironmentThread
 from .LedMatrix import MatrixThread
 from requests import get
 
-app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 if(os.getenv("UNITTEST_ENVIRONMENT") is None):
     celery.conf.beat_schedule = {
         'update_task': {
