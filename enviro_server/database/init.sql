@@ -8,7 +8,8 @@ GRANT ALL PRIVILEGES ON DATABASE rpi TO root;
 CREATE TABLE IF NOT EXISTS users(
     nickname varchar(50) not null primary key,
     password varchar(100) not null,
-    full_name varchar(100) not null
+    registered_on datetime not null,
+    is_admin boolean not null
 );
 
 CREATE TABLE IF NOT EXISTS environment_units(
