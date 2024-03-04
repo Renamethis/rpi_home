@@ -5,8 +5,8 @@ auth = Blueprint('auth', __name__)
 
 @auth.route('/login')
 def login():
-    return login_task.delay((request, )).get()
+    return login_task.delay([request.get_json(), ]).get()
 
 @auth.route('/signup', methods=['POST'])
 def signup():
-    return signup_task((request, )).delay().get()
+    return signup_task.delay([request.get_json(), ]).get()
