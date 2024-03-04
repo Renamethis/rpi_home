@@ -1,6 +1,8 @@
+import jwt
 import datetime
 from enviro_server.extensions import db
 from werkzeug.security import generate_password_hash
+
 # Record model
 class EnvironmentRecordModel(db.Model):
     __tablename__ = 'environment_record'
@@ -41,3 +43,13 @@ class User(db.Model):
         self.password = generate_password_hash(password, method='sha256').decode()
         self.registered_on = datetime.datetime.now()
         self.admin = admin
+
+    @staticmethod
+    def decode_auth_token(auth_token):
+        try:
+            payload = jwt.decode(auth_token, "TEST_KEY")
+            return payload['sub']
+        except jwt.ExpiredSignatureError:
+            return 'Signature expired. Please log in again.'
+        except jwt.InvalidTokenError:
+            return 'Invalid token. Please log in again.'
