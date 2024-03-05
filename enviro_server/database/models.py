@@ -32,15 +32,15 @@ class EnvironmentUnitModel(db.Model):
 
 # User model
 class User(db.Model):
+    __tablename__ = "users"
     nickname = db.Column(db.String(50), primary_key=True)
-    full_name = db.Column(db.String(100))
     password = db.Column(db.String(100))
     registered_on = db.Column(db.DateTime, nullable=False)
-    admin = db.Column(db.Boolean, nullable=False, default=False)
+    is_admin = db.Column(db.Boolean, nullable=False, default=False)
 
     def __init__(self, nickname, password, admin=False):
         self.nickname = nickname
-        self.password = generate_password_hash(password, method='sha256').decode()
+        self.password = generate_password_hash(password, method='sha256')
         self.registered_on = datetime.datetime.now()
         self.admin = admin
 
@@ -53,3 +53,18 @@ class User(db.Model):
             return 'Signature expired. Please log in again.'
         except jwt.InvalidTokenError:
             return 'Invalid token. Please log in again.'
+
+    def encode_auth_token(self, user_id):
+        try:
+            payload = {
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=0, seconds=5),
+                'iat': datetime.datetime.utcnow(),
+                'sub': user_id
+            }
+            return jwt.encode(
+                payload,
+                "TEST_KEY",
+                algorithm='HS256'
+            )
+        except Exception as e:
+            return e
