@@ -9,14 +9,15 @@ def login_task(args):
     try:
         # fetch the user data
         user = User.query.filter_by(
-            email=post_data['nickname']
+            nickname=post_data['nickname']
             ).first()
-        auth_token = user.encode_auth_token(user.id)
+        auth_token = user.encode_auth_token(user.nickname)
+        print(auth_token)
         if auth_token:
             responseObject = {
                 'status': 'success',
                 'message': 'Successfully logged in.',
-                'auth_token': auth_token.decode()
+                'auth_token': auth_token
             }
             return (responseObject, 200)
     except Exception as e:
@@ -32,31 +33,31 @@ def login_task(args):
 def signup_task(args):
     post_data = args[0]
     # check if user already exists
-    user = User.query.filter_by(email=post_data['nickname']).first()
+    user = User.query.filter_by(nickname=post_data['nickname']).first()
     if not user:
         try:
             user = User(
-                nickname=post_data.get['nickname'],
+                nickname=post_data['nickname'],
                 password=post_data['password']
             )
-
             # insert the user
             db.session.add(user)
             db.session.commit()
             # generate the auth token
-            auth_token = user.encode_auth_token(user.id)
+            auth_token = user.encode_auth_token(user.nickname)
             responseObject = {
                 'status': 'success',
                 'message': 'Successfully registered.',
-                'auth_token': auth_token.decode()
+                'auth_token': auth_token
             }
             return (responseObject, 201)
         except Exception as e:
+            print(e)
             responseObject = {
                 'status': 'fail',
                 'message': 'Some error occurred. Please try again.'
             }
-            return (responseObject, 401)
+            return (responseObject, 1)
     else:
         responseObject = {
             'status': 'fail',
