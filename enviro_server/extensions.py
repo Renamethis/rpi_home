@@ -42,7 +42,7 @@ celery = FlaskCelery(
     'enviro_server',
     broker=os.getenv("REDIS_URL"),
     backend=os.getenv("REDIS_URL"),
-    include=["enviro_server.tasks"]
+    include=["enviro_server.tasks", "enviro_server.auth.tasks"]
 )
 cors = CORS()
 
