@@ -1,18 +1,25 @@
-from json import loads
-from flask import make_response, jsonify
+from flask import Blueprint
 from enviro_server.extensions import celery, db
 from enviro_server.database.models import User
 
+auth = Blueprint('auth', __name__)
+
 @celery.task
 def login_task(args):
+    return login_routine(args, db.session)
+
+@celery.task
+def signup_task(args):
+    return signup_routine(args, db.session)
+
+def login_routine(args, session):
     post_data = args[0]
     try:
         # fetch the user data
-        user = User.query.filter_by(
+        user = session.query(User).filter_by(
             nickname=post_data['nickname']
             ).first()
         auth_token = user.encode_auth_token(user.nickname)
-        print(auth_token)
         if auth_token:
             responseObject = {
                 'status': 'success',
@@ -28,12 +35,10 @@ def login_task(args):
         }
         return (responseObject, 500)
 
-
-@celery.task
-def signup_task(args):
+def signup_routine(args, session):
     post_data = args[0]
     # check if user already exists
-    user = User.query.filter_by(nickname=post_data['nickname']).first()
+    user = session.query(User).filter_by(nickname=post_data['nickname']).first()
     if not user:
         try:
             user = User(
@@ -41,8 +46,8 @@ def signup_task(args):
                 password=post_data['password']
             )
             # insert the user
-            db.session.add(user)
-            db.session.commit()
+            session.add(user)
+            session.commit()
             # generate the auth token
             auth_token = user.encode_auth_token(user.nickname)
             responseObject = {
@@ -52,7 +57,6 @@ def signup_task(args):
             }
             return (responseObject, 201)
         except Exception as e:
-            print(e)
             responseObject = {
                 'status': 'fail',
                 'message': 'Some error occurred. Please try again.'
