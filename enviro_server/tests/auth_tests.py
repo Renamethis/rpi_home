@@ -51,3 +51,20 @@ def test_decode_auth_token(mocked_session):
     assert isinstance(auth_token, str)
     assert User.decode_auth_token(auth_token.encode("utf-8")) == 'nickname'
 
+def test_registration(client):
+    with client:
+        response = client.post(
+            '/auth/signup',
+            data=json.dumps(dict(
+                nickname='nickname',
+                password='123456'
+            )),
+            content_type='application/json'
+        )
+        data = json.loads(response.data.decode())
+        assert data['status'] == 'success'
+        assert data['message'] == 'Successfully registered.'
+        assert data['auth_token']
+        assert response.content_type == 'application/json'
+        assert response.status_code, 201
+
