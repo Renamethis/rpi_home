@@ -90,3 +90,36 @@ def test_registered_with_already_registered_user(client, mocked_session):
         assert response.content_type == 'application/json'
         assert response.status_code, 202
 
+def test_registered_user_login(client):
+    with client:
+        # user registration
+        resp_register = client.post(
+            '/auth/signup',
+            data=json.dumps(dict(
+                nickname='test',
+                password='123456'
+            )),
+            content_type='application/json',
+        )
+        print(resp_register)
+        data_register = json.loads(resp_register.data.decode())
+        assert data_register['status'] == 'success'
+        assert data_register['message'] == 'Successfully registered.'
+        assert data_register['auth_token']
+        assert resp_register.content_type == 'application/json'
+        assert resp_register.status_code, 201
+        # registered user login
+        response = client.post(
+            '/auth/login',
+            data=json.dumps(dict(
+                nickname='test',
+                password='123456'
+            )),
+            content_type='application/json'
+        )
+        data = json.loads(response.data.decode())
+        assert data['status'] == 'success'
+        assert data['message'] == 'Successfully logged in.'
+        assert data['auth_token']
+        assert response.content_type == 'application/json'
+        assert response.status_code, 200
