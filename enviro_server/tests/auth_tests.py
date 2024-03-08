@@ -68,3 +68,25 @@ def test_registration(client):
         assert response.content_type == 'application/json'
         assert response.status_code, 201
 
+def test_registered_with_already_registered_user(client, mocked_session):
+    user = User(
+        nickname='test',
+        password='test'
+    )
+    mocked_session.add(user)
+    mocked_session.commit()
+    with client:
+        response = client.post(
+            '/auth/signup',
+            data=json.dumps(dict(
+                nickname='test',
+                password='123456'
+            )),
+            content_type='application/json'
+        )
+        data = json.loads(response.data.decode())
+        assert data['status'] == 'fail'
+        assert data['message'] == 'User already exists. Please Log in.'
+        assert response.content_type == 'application/json'
+        assert response.status_code, 202
+
