@@ -3,8 +3,9 @@ import os
 import pytest
 import logging
 from datetime import datetime
-from unittest.mock import patch
-from enviro_server.tasks import last_entries, current_state, by_date, load_weather
+from enviro_server import create_app
+from enviro_server.tasks import last_entries_task, current_state_task, by_date_task, load_weather_task
+from enviro_server.extensions import db
 from enviro_server.EnvironmentData import CHANNELS, Units, Limits
 
 LOGGER = logging.getLogger(__name__)
@@ -15,6 +16,40 @@ def celery_config():
         'broker_url': os.getenv("REDIS_URL"),
         'result_backend': os.getenv("REDIS_URL")
     }
+
+@pytest.fixture(scope="function")
+def sqlalchemy_declarative_base():
+    return db.Model
+
+@pytest.fixture()
+def app(mocked_session):
+    app = create_app("testing")
+    app.config.update({
+        "session": mocked_session
+    })
+    return app
+
+
+@pytest.fixture()
+def client(app):
+    return app.test_client()
+
+
+@pytest.fixture()
+def runner(app):
+    return app.test_cli_runner()
+
+@pytest.fixture(scope="function")
+def sqlalchemy_mock_config():
+    resource_path = pathlib.Path(__file__).parent.resolve() / "resources" / "data_transform_resource.json"
+    with open(resource_path, "r") as resource:
+        dict_data = load(resource)
+        _raw_data = dict_data
+        _data = [{"id" : entry["id"], "ptime" : datetime.strptime(entry["ptime"], '%Y-%m-%d %H:%M:%S.%f'),
+                                                "value" : entry["value"], "field_name" : entry["field_name"],
+                                                "unit": entry["unit"]}
+                        for entry in dict_data]
+    return [("environment_record", _data)]
 
 # TODO: Add testset with pointer bigger than amount
 last_entries_test_set = ((20, 50), (2, 5))
