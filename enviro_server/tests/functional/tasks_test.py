@@ -33,7 +33,7 @@ def app(mocked_session):
 
 @pytest.fixture(scope="function")
 def sqlalchemy_mock_config():
-    resource_path = pathlib.Path(__file__).parent.resolve() / "resources" / "data_transform_resource.json"
+    resource_path = pathlib.Path(__file__).parent.parent.resolve() / "resources" / "data_transform_resource.json"
     with open(resource_path, "r") as resource:
         dict_data = load(resource)
         _raw_data = dict_data
