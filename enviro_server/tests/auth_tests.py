@@ -123,3 +123,20 @@ def test_registered_user_login(client):
         assert data['auth_token']
         assert response.content_type == 'application/json'
         assert response.status_code, 200
+
+def test_non_registered_user_login(client):
+    """ Test for login of non-registered user """
+    with client:
+        response = client.post(
+            '/auth/login',
+            data=json.dumps(dict(
+                nickname='test',
+                password='123456'
+            )),
+            content_type='application/json'
+        )
+        data = json.loads(response.data.decode())
+        assert data['status'] == 'fail'
+        assert data['message'] == 'Try again'
+        assert response.content_type == 'application/json'
+        assert response.status_code, 404
