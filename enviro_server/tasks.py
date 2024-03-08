@@ -68,27 +68,29 @@ def update_data_from_sensors():
 
 @celery.task
 def by_date(args):
-    with app.app_context():
-        sorted_by_date =  EnvironmentRecordModel.query.filter_by(ptime=args[0])
-        return transform_data(sorted_by_date, 1)[0]
+    by_date_task(args, db.session)
 
 
 @celery.task
 def current_state():
-    with app.app_context():
-        return EnvironmentData.from_message(redis_client.lrange('Data', -1, -1)[0]).dict
-
+    current_state_task()
 
 @celery.task
 def last_entries(args):
+    return last_entries_task(args, db.session)
+
+@celery.task
+def load_weather(args):
+    return load_weather_task(args)
+
+def last_entries_task(args, session):
     with app.app_context():
-        last_entries = EnvironmentRecordModel.query \
+        last_entries = session.query(EnvironmentRecordModel) \
             .order_by(EnvironmentRecordModel.ptime.desc())
         startSlice, endSlice, amount = calculate_slices(args, last_entries.count())
         return transform_data(last_entries.slice(startSlice, endSlice), amount)
 
-@celery.task
-def load_weather(args):
+def load_weather_task(args):
     url = os.getenv("WEATHER_API_URL") + "?lat=" + args[0] + "&lon=" + args[1] + "&appid=" + os.getenv("WEATHER_API_KEY")
     try:
         response = get(url)
@@ -98,3 +100,12 @@ def load_weather(args):
         return {
             "Error": str(e)
         }, e.status_code
+
+def by_date_task(args, session):
+    with app.app_context():
+        sorted_by_date =  session.query(EnvironmentRecordModel).filter_by(ptime=args[0])
+        return transform_data(sorted_by_date, 1)[0]
+
+def current_state_task():
+    with app.app_context():
+        return EnvironmentData.from_message(redis_client.lrange('Data', -1, -1)[0]).dict
