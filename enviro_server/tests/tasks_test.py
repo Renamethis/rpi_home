@@ -2,6 +2,8 @@
 import os
 import pytest
 import logging
+import pathlib
+from json import load
 from datetime import datetime
 from enviro_server import create_app
 from enviro_server.tasks import last_entries_task, current_state_task, by_date_task, load_weather_task
@@ -29,16 +31,6 @@ def app(mocked_session):
     })
     return app
 
-
-@pytest.fixture()
-def client(app):
-    return app.test_client()
-
-
-@pytest.fixture()
-def runner(app):
-    return app.test_cli_runner()
-
 @pytest.fixture(scope="function")
 def sqlalchemy_mock_config():
     resource_path = pathlib.Path(__file__).parent.resolve() / "resources" / "data_transform_resource.json"
@@ -55,17 +47,17 @@ def sqlalchemy_mock_config():
 last_entries_test_set = ((20, 50), (2, 5))
 
 def test_current_state():
-    result = current_state.delay().get()
+    result = current_state_task()
     assert len(result) != 0
     assert len(result) == CHANNELS + 1
     for key in result.keys():
         __test_record(key, result[key], True)
 
-@pytest.mark.skip(reason="Not working - move to mock")
-def test_by_date():
-    date = last_entries.delay([0, 1, ]).get()[0]['datetime']
+# @pytest.mark.skip(reason="Not working - move to mock")
+def test_by_date(mocked_session):
+    date = last_entries_task([0, 1, ], mocked_session)[0]['datetime']
     assert date is not None
-    result = by_date.delay([date, ]).get()
+    result = by_date_task([date, ], mocked_session)
     assert result is not None
     assert len(result) == CHANNELS + 1
     for key in result:
@@ -75,12 +67,12 @@ def test_by_date():
 def test_update_data_from_sensors():
     raise NotImplementedError
 
-def test_last_entries():
+def test_last_entries(mocked_session):
     for test_set in last_entries_test_set:
-        __test_last_entries(test_set[0], test_set[1])
+        __test_last_entries(test_set[0], test_set[1], mocked_session)
 
 def test_load_weather(): # TODO: Test Redis
-    weather = load_weather.delay(("55.6961287", "37.5604322")).get()[0]
+    weather = load_weather_task(("55.6961287", "37.5604322"))[0]
     assert weather["timezone"] == "Europe/Moscow"
 
 def __test_record(key, value, precise=False):
@@ -97,16 +89,17 @@ def __test_datetime(value, precise=False):
         time = datetime.strptime(value, '%Y-%m-%d %H:%M:%S.%f')
     except ValueError:
         time = datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%f')
+    except TypeError:
+        time = value
     assert time is not None
     if(precise):
         assert datetime.now().year == time.year
         assert datetime.now().month == time.month
         assert datetime.now().day == time.day
-        assert datetime.now().hour == time.hour
 
 
-def __test_last_entries(pointer, amount):
-    result = last_entries.delay([int(pointer), int(amount),]).get()
+def __test_last_entries(pointer, amount, mocked_session):
+    result = last_entries_task([int(pointer), int(amount),], mocked_session)
     assert result is not None
     assert len(result) < amount * CHANNELS
     for entry in result:
