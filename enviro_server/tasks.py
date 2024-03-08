@@ -1,7 +1,6 @@
 import os
 from .extensions import celery, db, redis_client
-from . import app
-from flask import jsonify
+from enviro_server import app
 from celery.signals import worker_ready
 from .EnvironmentData import Units, EnvironmentData
 from .database.models import EnvironmentUnitModel, EnvironmentRecordModel
@@ -15,7 +14,7 @@ if(os.getenv("UNITTEST_ENVIRONMENT") is None):
     celery.conf.beat_schedule = {
         'update_task': {
             'task': 'enviro_server.tasks.update_data_from_sensors',
-            'schedule': 600.0,
+            'schedule': 5.0,
         },
         'weather_task': {
             'task': 'enviro_server.tasks.load_weather',
@@ -92,7 +91,6 @@ def last_entries(args):
 def load_weather(args):
     url = os.getenv("WEATHER_API_URL") + "?lat=" + args[0] + "&lon=" + args[1] + "&appid=" + os.getenv("WEATHER_API_KEY")
     try:
-        print(url)
         response = get(url)
         redis_client.rpush('Weather', response.content)
         return response.json(), 200

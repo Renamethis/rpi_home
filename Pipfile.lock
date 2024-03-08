@@ -220,6 +220,14 @@
             "index": "pypi",
             "version": "==2.8.0"
         },
+        "pytest-sqlalchemy-mock": {
+            "hashes": [
+                "sha256:2e841902cabcff98f861dd3f042fb4c440965061c8601777f61b3363b5691eb6",
+                "sha256:d1d8ad35648c3048efbda9a42d5cbc0e5a5ad30d0cc0cc39073e7f3b79307e91"
+            ],
+            "index": "pypi",
+            "version": "==0.1.5"
+        },
         "cryptography": {
             "hashes": [
                 "sha256:6fe07eec95dfd477eb9530aef5bead34fec819b3aaf6c5bd6d20565da607bfe1",

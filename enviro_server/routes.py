@@ -1,6 +1,7 @@
-from enviro_server.tasks import app, last_entries, current_state, by_date, load_weather
+import os
+from enviro_server import app
+from enviro_server.tasks import last_entries, current_state, by_date, load_weather
 from flask_cors import cross_origin
-
 
 # Return data assigned to specific date
 @app.route("/find_by_date/<date>")
