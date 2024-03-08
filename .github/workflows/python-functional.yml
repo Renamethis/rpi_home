@@ -31,3 +31,6 @@ jobs:
       - name: functional
         run: |
           pipenv run python -m pytest enviro_server/tests/tasks_test.py
+      - name: authentication
+        run: |
+          pipenv run python -m pytest enviro_server/tests/auth_tests.py
