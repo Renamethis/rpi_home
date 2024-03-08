@@ -25,6 +25,9 @@ jobs:
       - name: git
         run: |
           git fetch && git checkout ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}} && git pull origin ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}} --rebase
+      - name: lfs
+        run: |
+          git lfs fetch && git lfs pull
       - name: sync
         run: |
           pipenv sync
