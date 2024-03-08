@@ -28,9 +28,9 @@ jobs:
       - name: sync
         run: |
           pipenv sync
-      - name: functional
+      - name: tasks
         run: |
-          pipenv run python -m pytest enviro_server/tests/tasks_test.py
+          pipenv run python -m pytest enviro_server/tests/functional/tasks_test.py
       - name: authentication
         run: |
-          pipenv run python -m pytest enviro_server/tests/auth_tests.py
+          pipenv run python -m pytest enviro_server/tests/functional/auth_tests.py
