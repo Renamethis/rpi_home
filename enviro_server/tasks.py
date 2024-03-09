@@ -1,4 +1,5 @@
 import os
+from json import loads
 from .extensions import celery, db, redis_client
 from enviro_server import app
 from celery.signals import worker_ready
@@ -81,7 +82,7 @@ def last_entries(args):
 
 @celery.task
 def load_weather(args):
-    return load_weather_task(args, redis_client)
+    return load_weather_task(args, False, redis_client)
 
 def last_entries_task(args, session):
     with app.app_context():
@@ -90,12 +91,15 @@ def last_entries_task(args, session):
         startSlice, endSlice, amount = calculate_slices(args, last_entries.count())
         return transform_data(last_entries.slice(startSlice, endSlice), amount)
 
-def load_weather_task(args, client):
+def load_weather_task(args, testing, client):
     url = os.getenv("WEATHER_API_URL") + "?lat=" + args[0] + "&lon=" + args[1] + "&appid=" + os.getenv("WEATHER_API_KEY")
     try:
-        response = get(url)
-        client.rpush('Weather', response.content)
-        return response.json(), 200
+        if(not testing):
+            response = get(url).content
+        else:
+            response = args[2]
+        client.rpush('Weather', response)
+        return loads(response), 200
     except Exception as e:
         return {
             "Error": str(e)
