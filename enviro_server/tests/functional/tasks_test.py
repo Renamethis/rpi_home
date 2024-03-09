@@ -86,6 +86,7 @@ def test_load_weather(redis): # TODO: Test Redis
     with open(pathlib.Path(__file__).parent.parent.resolve() / "resources" / "weather_data.json") as file:
         redis.rpush('Weather', file.read())
     weather = load_weather_task(("55.6961287", "37.5604322"), redis)[0]
+    print(weather)
     assert weather["timezone"] == "Europe/Moscow"
 
 def __test_record(key, value, precise=False):
