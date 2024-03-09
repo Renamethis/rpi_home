@@ -26,6 +26,17 @@ def client(app):
 def runner(app):
     return app.test_cli_runner()
 
+def test_decode_auth_token(mocked_session):
+    user = User(
+        nickname='nickname',
+        password='test'
+    )
+    mocked_session.add(user)
+    mocked_session.commit()
+    auth_token = user.encode_auth_token(user.nickname)
+    assert isinstance(auth_token, str)
+    assert User.decode_auth_token(auth_token.encode("utf-8")) == 'nickname'
+
 def test_registration(client):
     with client:
         response = client.post(
