@@ -1,23 +1,21 @@
 
 import os
 import pytest
+from pytest_mock_resources import create_redis_fixture
 import logging
 import pathlib
-from json import load
+from json import load, dumps
 from datetime import datetime
+from enviro_server.EnvironmentData import EnvironmentData, EnvironmentValue, Limits
 from enviro_server import create_app
 from enviro_server.tasks import last_entries_task, current_state_task, by_date_task, load_weather_task
 from enviro_server.extensions import db
 from enviro_server.EnvironmentData import CHANNELS, Units, Limits
 
 LOGGER = logging.getLogger(__name__)
+ENVIRONMENT_DATA_PATH = pathlib.Path(__file__).parent.parent.resolve() / "resources" / "data_transform_resource.json"
 
-@pytest.fixture(scope='session')
-def celery_config():
-    return {
-        'broker_url': os.getenv("REDIS_URL"),
-        'result_backend': os.getenv("REDIS_URL")
-    }
+redis = create_redis_fixture()
 
 @pytest.fixture(scope="function")
 def sqlalchemy_declarative_base():
@@ -33,10 +31,11 @@ def app(mocked_session):
 
 @pytest.fixture(scope="function")
 def sqlalchemy_mock_config():
-    resource_path = pathlib.Path(__file__).parent.parent.resolve() / "resources" / "data_transform_resource.json"
+    resource_path = ENVIRONMENT_DATA_PATH
     with open(resource_path, "r") as resource:
         dict_data = load(resource)
         _raw_data = dict_data
+        print(resource_path)
         _data = [{"id" : entry["id"], "ptime" : datetime.strptime(entry["ptime"], '%Y-%m-%d %H:%M:%S.%f'),
                                                 "value" : entry["value"], "field_name" : entry["field_name"],
                                                 "unit": entry["unit"]}
@@ -46,8 +45,20 @@ def sqlalchemy_mock_config():
 # TODO: Add testset with pointer bigger than amount
 last_entries_test_set = ((20, 50), (2, 5))
 
-def test_current_state():
-    result = current_state_task()
+def test_current_state(redis):
+    data = EnvironmentData(
+            datetime.now(),
+            EnvironmentValue(28, Units.TEMPERATURE, Limits["temperature"]),
+            EnvironmentValue(970, Units.PRESSURE, Limits["pressure"]),
+            EnvironmentValue(45, Units.HUMIDITY, Limits["humidity"]),
+            EnvironmentValue(30, Units.ILLUMINATION, Limits["illumination"]),
+            EnvironmentValue(20, Units.GAS, Limits["oxidizing"]),
+            EnvironmentValue(700, Units.GAS, Limits["reducing"]),
+            EnvironmentValue(80, Units.GAS, Limits["nh3"]),
+            EnvironmentValue(80, Units.DUST, Limits["dust"])
+    )
+    redis.rpush('Data', data.serialize())
+    result = current_state_task(redis)
     assert len(result) != 0
     assert len(result) == CHANNELS + 1
     for key in result.keys():
@@ -71,8 +82,10 @@ def test_last_entries(mocked_session):
     for test_set in last_entries_test_set:
         __test_last_entries(test_set[0], test_set[1], mocked_session)
 
-def test_load_weather(): # TODO: Test Redis
-    weather = load_weather_task(("55.6961287", "37.5604322"))[0]
+def test_load_weather(redis): # TODO: Test Redis
+    with open(pathlib.Path(__file__).parent.parent.resolve() / "resources" / "weather_data.json") as file:
+        redis.rpush('Weather', file.read())
+    weather = load_weather_task(("55.6961287", "37.5604322"), redis)[0]
     assert weather["timezone"] == "Europe/Moscow"
 
 def __test_record(key, value, precise=False):
