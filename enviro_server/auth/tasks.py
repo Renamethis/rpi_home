@@ -5,14 +5,14 @@ from enviro_server.database.models import User
 auth = Blueprint('auth', __name__)
 
 @celery.task
-def login_task(args):
-    return login_routine(args, db.session)
+def login(args):
+    return login_task(args, db.session)
 
 @celery.task
-def signup_task(args):
-    return signup_routine(args, db.session)
+def signup(args):
+    return signup_task(args, db.session)
 
-def login_routine(args, session):
+def login_task(args, session):
     post_data = args[0]
     try:
         # fetch the user data
@@ -35,7 +35,7 @@ def login_routine(args, session):
         }
         return (responseObject, 500)
 
-def signup_routine(args, session):
+def signup_task(args, session):
     post_data = args[0]
     # check if user already exists
     user = session.query(User).filter_by(nickname=post_data['nickname']).first()

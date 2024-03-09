@@ -38,4 +38,4 @@ jobs:
         git lfs fetch && git lfs pull
     - name: unittests
       run: |
-        UNITTEST_ENVIRONMENT="ON" pipenv run python -m unittest enviro_server/tests/unittests.py
+        UNITTEST_ENVIRONMENT="ON" pipenv run python -m unittest enviro_server/tests/unittests/unittests.py

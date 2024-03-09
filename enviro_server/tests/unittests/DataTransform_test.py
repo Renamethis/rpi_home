@@ -1,12 +1,12 @@
 import pathlib
 from datetime import datetime
 from enviro_server.EnvironmentData import CHANNELS, Units, Limits
-from enviro_server.tests.DataTest import DataTest
+from enviro_server.tests.unittests.DataTest import DataTest
 from enviro_server.transform_utils import transform_data, calculate_slices
 
 class DataTransformTest(DataTest):
         def setUp(self):
-            self.resource_path = pathlib.Path(__file__).parent.resolve() / "resources" / "data_transform_resource.json"
+            self.resource_path = pathlib.Path(__file__).parent.parent.resolve() / "resources" / "data_transform_resource.json"
             super().setUp()
 
         def test_calculate_slices_big(self):

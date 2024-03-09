@@ -1,6 +1,6 @@
 import unittest
-from enviro_server.tests.EnvironmentData_test import EnvironmentDataTest, EnvironmentValueTest
-from enviro_server.tests.DataTransform_test import DataTransformTest
+from enviro_server.tests.unittests.EnvironmentData_test import EnvironmentDataTest, EnvironmentValueTest
+from enviro_server.tests.unittests.DataTransform_test import DataTransformTest
 
 def suite():
     suite = unittest.TestSuite()

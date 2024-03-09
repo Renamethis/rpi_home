@@ -26,20 +26,6 @@ def client(app):
 def runner(app):
     return app.test_cli_runner()
 
-# TODO: For database tests
-# @pytest.fixture(scope="function")
-# def sqlalchemy_mock_config():
-#     return [("user", [
-#         {
-#             "nickname": "test_1",
-#             "password": "test1"
-#         },
-#         {
-#             "nickname": "test_2",
-#             "password": "test2"
-#         }
-#     ])]
-
 def test_decode_auth_token(mocked_session):
     user = User(
         nickname='nickname',
