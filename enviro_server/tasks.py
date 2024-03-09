@@ -73,7 +73,7 @@ def by_date(args):
 
 @celery.task
 def current_state():
-    current_state_task()
+    current_state_task(redis_client)
 
 @celery.task
 def last_entries(args):
@@ -81,7 +81,7 @@ def last_entries(args):
 
 @celery.task
 def load_weather(args):
-    return load_weather_task(args)
+    return load_weather_task(args, redis_client)
 
 def last_entries_task(args, session):
     with app.app_context():
@@ -90,11 +90,11 @@ def last_entries_task(args, session):
         startSlice, endSlice, amount = calculate_slices(args, last_entries.count())
         return transform_data(last_entries.slice(startSlice, endSlice), amount)
 
-def load_weather_task(args):
+def load_weather_task(args, client):
     url = os.getenv("WEATHER_API_URL") + "?lat=" + args[0] + "&lon=" + args[1] + "&appid=" + os.getenv("WEATHER_API_KEY")
     try:
         response = get(url)
-        redis_client.rpush('Weather', response.content)
+        client.rpush('Weather', response.content)
         return response.json(), 200
     except Exception as e:
         return {
@@ -106,6 +106,6 @@ def by_date_task(args, session):
         sorted_by_date =  session.query(EnvironmentRecordModel).filter_by(ptime=args[0])
         return transform_data(sorted_by_date, 1)[0]
 
-def current_state_task():
+def current_state_task(client):
     with app.app_context():
-        return EnvironmentData.from_message(redis_client.lrange('Data', -1, -1)[0]).dict
+        return EnvironmentData.from_message(client.lrange('Data', -1, -1)[0]).dict
