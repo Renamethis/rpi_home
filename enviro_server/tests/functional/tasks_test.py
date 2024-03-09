@@ -35,7 +35,6 @@ def sqlalchemy_mock_config():
     with open(resource_path, "r") as resource:
         dict_data = load(resource)
         _raw_data = dict_data
-        print(resource_path)
         _data = [{"id" : entry["id"], "ptime" : datetime.strptime(entry["ptime"], '%Y-%m-%d %H:%M:%S.%f'),
                                                 "value" : entry["value"], "field_name" : entry["field_name"],
                                                 "unit": entry["unit"]}
@@ -84,10 +83,10 @@ def test_last_entries(mocked_session):
 
 def test_load_weather(redis): # TODO: Test Redis
     with open(pathlib.Path(__file__).parent.parent.resolve() / "resources" / "weather_data.json") as file:
-        redis.rpush('Weather', file.read())
-    weather = load_weather_task(("55.6961287", "37.5604322"), redis)[0]
-    print(weather)
-    assert weather["timezone"] == "Europe/Moscow"
+        mock_weather = file.read()
+        weather = load_weather_task(("55.6961287", "37.5604322", mock_weather), True, redis)[0]
+        print(weather)
+        assert weather["timezone"] == "Europe/Moscow"
 
 def __test_record(key, value, precise=False):
     assert key is not None
