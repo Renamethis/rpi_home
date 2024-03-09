@@ -51,14 +51,14 @@ class EnvironmentData:
         nh3 : EnvironmentValue # Ok
 
         @staticmethod
-        def __from_dict(dict, itype=None):
+        def from_dict(dict, itype=None):
             if(itype is None):
                 itype = EnvironmentData
             try:
                 fieldtypes = {f.name:f.type for f in fields(EnvironmentData)}
-                return itype(**{f:itype.__from_dict(dict[f], fieldtypes[f]) \
+                return itype(**{f:itype.from_dict(dict[f], fieldtypes[f]) \
                     for f in dict})
-            except AttributeError as e:
+            except (AttributeError, KeyError) as e:
                 try:
                     return datetime.strptime(dict, '%Y-%m-%d %H:%M:%S.%f')
                 except TypeError:
@@ -66,7 +66,7 @@ class EnvironmentData:
 
         @staticmethod
         def from_message(message):
-            return EnvironmentData.__from_dict(loads(message))
+            return EnvironmentData.from_dict(loads(message))
 
         @property
         def dict(self):
