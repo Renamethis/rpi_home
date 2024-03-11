@@ -1,14 +1,18 @@
 import os
 from json import loads
-from .extensions import celery, db, redis_client
 from enviro_server import app
+
+if not app.config["TESTING"]:
+    from .extensions import celery, db, redis_client
+
 from celery.signals import worker_ready
 from .EnvironmentData import Units, EnvironmentData
 from .database.models import EnvironmentUnitModel, EnvironmentRecordModel
 from .transform_utils import transform_data, calculate_slices
 from celery.utils.log import get_task_logger
-from .EnvironmentThread import EnvironmentThread
-from .LedMatrix import MatrixThread
+if not app.config["TESTING"]:
+    from .EnvironmentThread import EnvironmentThread
+    from .LedMatrix import MatrixThread
 from requests import get
 
 if(os.getenv("UNITTEST_ENVIRONMENT") is None):
