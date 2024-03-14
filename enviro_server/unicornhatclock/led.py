@@ -1,7 +1,21 @@
 from copy import deepcopy
-import time
-from enviro_server.unicornhatclock.sunrise import get_brightness_level
+from datetime import datetime, timedelta, timezone
 from enviro_server.unicornhatclock.options import led_options
+
+def get_brightness_level(weather):
+    now = datetime.now()
+    if(weather is not None):
+        sunrise = weather["current"]["sunrise"]
+        sunset = weather["current"]["sunset"]
+    else:
+        return 0.5
+    if now < datetime.fromtimestamp(sunrise):
+        return now.hour / datetime.fromtimestamp(sunrise).hour
+    elif now < datetime.fromtimestamp(sunset):
+        return 1
+    else:
+        return 0
+
 
 class Led:
     def __init__(self, hat, width, height):
@@ -91,9 +105,9 @@ class Led:
         brightness = min_val + ((max_val - min_val) * level)
         self.hat.set_brightness(brightness)
 
-    def draw_function(self, draw_func):
+    def draw_function(self, weather, draw_func):
         self.clear()
-        self.set_brightness(1)
+        self.set_brightness(get_brightness_level(weather))
         draw_func()
         self.show()
 

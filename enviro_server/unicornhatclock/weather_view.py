@@ -129,9 +129,9 @@ class WeatherView:
 
     def draw(self):
         if(not self.__state):
-            self.led.draw_function(self.draw_weather)
+            self.led.draw_function(self.__weather, self.draw_weather)
         else:
-            self.led.draw_function(self.draw_time)
+            self.led.draw_function(self.__weather, self.draw_time)
 
     @property
     def timezone(self):
