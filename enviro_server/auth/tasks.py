@@ -12,6 +12,50 @@ def login(args):
 def signup(args):
     return signup_task(args, db.session)
 
+@celery.task
+def logout(args):
+    return logout_task(args, db.session)
+
+def logout_task(args, session):
+    request = args[0]
+    auth_header = request.headers.get('Authorization')
+    if auth_header:
+        auth_token = auth_header.split(" ")[1]
+    else:
+        auth_token = ''
+    if auth_token:
+        resp = User.decode_auth_token(auth_token)
+        if not isinstance(resp, str):
+            # mark the token as blacklisted
+            blacklist_token = Blacklist(token=auth_token)
+            try:
+                # insert the token
+                db.session.add(blacklist_token)
+                db.session.commit()
+                responseObject = {
+                    'status': 'success',
+                    'message': 'Successfully logged out.'
+                }
+                return (responseObject, 200)
+            except Exception as e:
+                responseObject = {
+                    'status': 'fail',
+                    'message': e
+                }
+                return (responseObject, 200)
+        else:
+            responseObject = {
+                'status': 'fail',
+                'message': resp
+            }
+            return (responseObject, 401)
+    else:
+        responseObject = {
+            'status': 'fail',
+            'message': 'Provide a valid auth token.'
+        }
+        return (responseObject, 403)
+
 def login_task(args, session):
     post_data = args[0]
     try:
