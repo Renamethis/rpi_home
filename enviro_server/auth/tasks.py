@@ -94,12 +94,13 @@ def status_task(args, session):
 
 def login_task(args, session):
     post_data = args[0]
+    secret = args[1]
     try:
         # fetch the user data
         user = session.query(User).filter_by(
             nickname=post_data['nickname']
             ).first()
-        auth_token = user.encode_auth_token(user.nickname)
+        auth_token = user.encode_auth_token(secret, user.nickname)
         if auth_token:
             responseObject = {
                 'status': 'success',
@@ -117,7 +118,7 @@ def login_task(args, session):
 
 def signup_task(args, session):
     post_data = args[0]
-    # check if user already exists
+    secret = args[1]
     user = session.query(User).filter_by(nickname=post_data['nickname']).first()
     if not user:
         try:
@@ -128,8 +129,7 @@ def signup_task(args, session):
             # insert the user
             session.add(user)
             session.commit()
-            # generate the auth token
-            auth_token = user.encode_auth_token(user.nickname)
+            auth_token = user.encode_auth_token(secret, user.nickname)
             responseObject = {
                 'status': 'success',
                 'message': 'Successfully registered.',
