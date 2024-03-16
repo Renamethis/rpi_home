@@ -30,6 +30,28 @@ class EnvironmentUnitModel(db.Model):
     unit = db.Column(db.String(10), nullable=False, unique=False)
     records = db.relationship('EnvironmentRecordModel', backref='environment_units', lazy=True)
 
+# Blacklist model
+class Blacklist(db.Model):
+    __tablename__ = 'blacklist'
+
+    token = db.Column(db.String(500), primary_key=True, unique=True, nullable=False)
+    join_date = db.Column(db.DateTime, nullable=False)
+
+    def __init__(self, token):
+        self.token = token
+        self.join_date = datetime.datetime.now()
+
+    def __repr__(self):
+        return '<id: token: {}'.format(self.token)
+
+    @staticmethod
+    def check_blacklist(auth_token, session):
+        res = session.query(Blacklist).filter_by(token=str(auth_token)).first()
+        if res:
+            return True
+        else:
+            return False
+
 # User model
 class User(db.Model):
     __tablename__ = "users"
@@ -45,25 +67,29 @@ class User(db.Model):
         self.admin = admin
 
     @staticmethod
-    def decode_auth_token(auth_token):
+    def decode_auth_token(secret, auth_token, session):
         try:
-            payload = jwt.decode(auth_token, "TEST_KEY", algorithms=["HS256"])
-            return payload['sub']
+            payload = jwt.decode(auth_token, secret, algorithms="HS256")
+            is_blacklisted_token = Blacklist.check_blacklist(auth_token, session)
+            if is_blacklisted_token:
+                return 'Token blacklisted. Please log in again.', 1
+            else:
+                return payload['sub'], 0
         except jwt.ExpiredSignatureError:
-            return 'Signature expired. Please log in again.'
+            return 'Signature expired. Please log in again.', 1
         except jwt.InvalidTokenError:
-            return 'Invalid token. Please log in again.'
+            return 'Invalid token. Please log in again.', 1
 
-    def encode_auth_token(self, nickname):
+    def encode_auth_token(self, secret, nickname):
         try:
             payload = {
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=0, seconds=5),
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
                 'iat': datetime.datetime.utcnow(),
                 'sub': nickname
             }
             return jwt.encode(
                 payload,
-                "TEST_KEY",
+                secret,
                 algorithm='HS256'
             )
         except Exception as e:

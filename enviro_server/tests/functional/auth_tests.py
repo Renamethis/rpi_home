@@ -12,7 +12,8 @@ def sqlalchemy_declarative_base():
 def app(mocked_session):
     app = create_app("testing")
     app.config.update({
-        "session": mocked_session
+        "session": mocked_session,
+        "SECRET_KEY": "TEST_KEY"
     })
     return app
 
@@ -33,9 +34,10 @@ def test_decode_auth_token(mocked_session):
     )
     mocked_session.add(user)
     mocked_session.commit()
-    auth_token = user.encode_auth_token(user.nickname)
+    auth_token = user.encode_auth_token("TEST_SECRET", user.nickname)
     assert isinstance(auth_token, str)
-    assert User.decode_auth_token(auth_token.encode("utf-8")) == 'nickname'
+    result, _ = User.decode_auth_token("TEST_SECRET", auth_token.encode("utf-8"), mocked_session)
+    assert result == 'nickname'
 
 def test_registration(client):
     with client:
@@ -111,7 +113,6 @@ def test_registered_user_login(client):
         assert response.status_code, 200
 
 def test_non_registered_user_login(client):
-    """ Test for login of non-registered user """
     with client:
         response = client.post(
             '/auth/login',
