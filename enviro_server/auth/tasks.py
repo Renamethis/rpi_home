@@ -1,6 +1,6 @@
 from flask import Blueprint
 from enviro_server.extensions import celery, db
-from enviro_server.database.models import User
+from enviro_server.database.models import User, Blacklist
 
 auth = Blueprint('auth', __name__)
 
