@@ -28,14 +28,14 @@ def logout_task(args, session):
     else:
         auth_token = ''
     if auth_token:
-        resp = User.decode_auth_token(auth_token)
-        if not isinstance(resp, str):
+        resp, rc = User.decode_auth_token(secret, auth_token, session)
+        if not rc:
             # mark the token as blacklisted
             blacklist_token = Blacklist(token=auth_token)
             try:
                 # insert the token
-                db.session.add(blacklist_token)
-                db.session.commit()
+                session.add(blacklist_token)
+                session.commit()
                 responseObject = {
                     'status': 'success',
                     'message': 'Successfully logged out.'
@@ -44,7 +44,7 @@ def logout_task(args, session):
             except Exception as e:
                 responseObject = {
                     'status': 'fail',
-                    'message': e
+                    'message': str(e)
                 }
                 return (responseObject, 200)
         else:
