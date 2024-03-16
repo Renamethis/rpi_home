@@ -16,5 +16,12 @@ def signup_route():
 @auth.route('/logout', methods=['POST'])
 def logout_route():
     if(auth.config['TESTING']):
-        return tuple(logout_task([request.get_json()], auth.config['session']))
-    return tuple(logout.delay([request.get_json(), ]).get())
+        return tuple(logout_task([request.headers.get("Authorization"), auth.config['SECRET_KEY']], auth.config['session']))
+    print(request.headers.get("Authorization"))
+    return tuple(logout.delay([request.headers.get("Authorization"), auth.config['SECRET_KEY']]).get())
+
+@auth.route('/status', methods=['POST'])
+def status_route():
+    if(auth.config['TESTING']):
+        return tuple(status_route([request.headers.get("Authorization"), auth.config['SECRET_KEY']], auth.config['session']))
+    return tuple(status.delay([request.headers.get("Authorization"), auth.config['SECRET_KEY']]).get())

@@ -16,6 +16,10 @@ def signup(args):
 def logout(args):
     return logout_task(args, db.session)
 
+@celery.task
+def status(args):
+    return status_task(args, db.session)
+
 def logout_task(args, session):
     request = args[0]
     auth_header = request.headers.get('Authorization')
@@ -55,6 +59,38 @@ def logout_task(args, session):
             'message': 'Provide a valid auth token.'
         }
         return (responseObject, 403)
+
+def status_task(args, session):
+    auth_header = args[0]
+    secret = args[1]
+    if auth_header:
+        auth_token = auth_header.split(" ")[1]
+    else:
+        auth_token = ''
+    if auth_token:
+        resp, rc = User.decode_auth_token(secret, auth_token, session)
+        if not rc:
+            user = session.query(User).filter_by(nickname=resp).first()
+            responseObject = {
+                'status': 'success',
+                'data': {
+                    'nickname': user.nickname,
+                    'is_admin': user.is_admin,
+                    'registered_on': user.registered_on
+                }
+            }
+            return (responseObject, 200)
+        responseObject = {
+            'status': 'fail',
+            'message': resp
+        }
+        return (responseObject, 401)
+    else:
+        responseObject = {
+            'status': 'fail',
+            'message': 'Provide a valid auth token.'
+        }
+        return (responseObject, 401)
 
 def login_task(args, session):
     post_data = args[0]
