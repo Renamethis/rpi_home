@@ -60,10 +60,23 @@ class User(db.Model):
         self.admin = admin
 
     @staticmethod
+    def check_blacklist(auth_token):
+        res = Blacklist.query.filter_by(token=str(auth_token)).first()
+        if res:
+            return True
+        else:
+            return False
+
+    @staticmethod
     def decode_auth_token(auth_token):
         try:
-            payload = jwt.decode(auth_token, "TEST_KEY", algorithms=["HS256"])
-            return payload['sub']
+            payload = jwt.decode(auth_token, auth.config["SECRET_KEY"])
+            session = auth.config["session"] if auth.config["TESTING"] else db.session
+            is_blacklisted_token = Blacklist.check_blacklist(auth_token)
+            if is_blacklisted_token:
+                return 'Token blacklisted. Please log in again.'
+            else:
+                return payload['sub']
         except jwt.ExpiredSignatureError:
             return 'Signature expired. Please log in again.'
         except jwt.InvalidTokenError:
