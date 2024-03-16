@@ -12,7 +12,8 @@ def sqlalchemy_declarative_base():
 def app(mocked_session):
     app = create_app("testing")
     app.config.update({
-        "session": mocked_session
+        "session": mocked_session,
+        "SECRET_KEY": "TEST_KEY"
     })
     return app
 
