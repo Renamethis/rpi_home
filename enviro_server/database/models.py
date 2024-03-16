@@ -67,38 +67,29 @@ class User(db.Model):
         self.admin = admin
 
     @staticmethod
-    def check_blacklist(auth_token):
-        res = Blacklist.query.filter_by(token=str(auth_token)).first()
-        if res:
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def decode_auth_token(auth_token):
+    def decode_auth_token(secret, auth_token, session):
         try:
-            payload = jwt.decode(auth_token, auth.config["SECRET_KEY"])
-            session = auth.config["session"] if auth.config["TESTING"] else db.session
-            is_blacklisted_token = Blacklist.check_blacklist(auth_token)
+            payload = jwt.decode(auth_token, secret, algorithms="HS256")
+            is_blacklisted_token = Blacklist.check_blacklist(auth_token, session)
             if is_blacklisted_token:
-                return 'Token blacklisted. Please log in again.'
+                return 'Token blacklisted. Please log in again.', 1
             else:
-                return payload['sub']
+                return payload['sub'], 0
         except jwt.ExpiredSignatureError:
-            return 'Signature expired. Please log in again.'
+            return 'Signature expired. Please log in again.', 1
         except jwt.InvalidTokenError:
-            return 'Invalid token. Please log in again.'
+            return 'Invalid token. Please log in again.', 1
 
-    def encode_auth_token(self, nickname):
+    def encode_auth_token(self, secret, nickname):
         try:
             payload = {
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=0, seconds=5),
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
                 'iat': datetime.datetime.utcnow(),
                 'sub': nickname
             }
             return jwt.encode(
                 payload,
-                "TEST_KEY",
+                secret,
                 algorithm='HS256'
             )
         except Exception as e:

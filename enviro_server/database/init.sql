@@ -13,8 +13,7 @@ CREATE TABLE IF NOT EXISTS users(
 );
 
 CREATE TABLE IF NOT EXISTS blacklist(
-    id int primary key,
-    token varchar(500) not null,
+    token varchar(500) not null primary key,
     join_date timestamp not null
 );
 
