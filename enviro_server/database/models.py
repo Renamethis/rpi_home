@@ -30,6 +30,21 @@ class EnvironmentUnitModel(db.Model):
     unit = db.Column(db.String(10), nullable=False, unique=False)
     records = db.relationship('EnvironmentRecordModel', backref='environment_units', lazy=True)
 
+# Blacklist model
+class Blacklist(db.Model):
+    __tablename__ = 'blacklist'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    token = db.Column(db.String(500), unique=True, nullable=False)
+    blacklisted_on = db.Column(db.DateTime, nullable=False)
+
+    def __init__(self, token):
+        self.token = token
+        self.blacklisted_on = datetime.datetime.now()
+
+    def __repr__(self):
+        return '<id: token: {}'.format(self.token)
+
 # User model
 class User(db.Model):
     __tablename__ = "users"

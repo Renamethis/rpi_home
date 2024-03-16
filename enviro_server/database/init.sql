@@ -12,6 +12,12 @@ CREATE TABLE IF NOT EXISTS users(
     is_admin boolean not null
 );
 
+CREATE TABLE IF NOT EXISTS blacklist(
+    id int primary key,
+    token varchar(500) not null,
+    join_date timestamp not null
+);
+
 CREATE TABLE IF NOT EXISTS environment_units(
     type varchar(50) not null primary key,
     unit varchar(10) not null
