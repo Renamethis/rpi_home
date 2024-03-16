@@ -34,16 +34,23 @@ class EnvironmentUnitModel(db.Model):
 class Blacklist(db.Model):
     __tablename__ = 'blacklist'
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    token = db.Column(db.String(500), unique=True, nullable=False)
-    blacklisted_on = db.Column(db.DateTime, nullable=False)
+    token = db.Column(db.String(500), primary_key=True, unique=True, nullable=False)
+    join_date = db.Column(db.DateTime, nullable=False)
 
     def __init__(self, token):
         self.token = token
-        self.blacklisted_on = datetime.datetime.now()
+        self.join_date = datetime.datetime.now()
 
     def __repr__(self):
         return '<id: token: {}'.format(self.token)
+
+    @staticmethod
+    def check_blacklist(auth_token, session):
+        res = session.query(Blacklist).filter_by(token=str(auth_token)).first()
+        if res:
+            return True
+        else:
+            return False
 
 # User model
 class User(db.Model):
