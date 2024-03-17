@@ -4,6 +4,21 @@ from enviro_server.database.models import User, Blacklist
 
 auth = Blueprint('auth', __name__)
 
+def token(func):
+    def wrapper(args, session):
+        token = args[0]
+        secret = args[1]
+        if token:
+            token = token.split(" ")[1]
+        else:
+            token = ''
+        resp, rc = User.decode_auth_token(secret, token, session)
+        if(not rc and token):
+            args.append(resp)
+            return func(args, session)
+        return {"status": "token authentication failed", "message": resp}, 401
+    return wrapper
+
 @celery.task
 def login(args):
     return login_task(args, db.session)
@@ -20,77 +35,41 @@ def logout(args):
 def status(args):
     return status_task(args, db.session)
 
+@token
 def logout_task(args, session):
-    request = args[0]
-    auth_header = request.headers.get('Authorization')
-    if auth_header:
-        auth_token = auth_header.split(" ")[1]
-    else:
-        auth_token = ''
-    if auth_token:
-        resp, rc = User.decode_auth_token(secret, auth_token, session)
-        if not rc:
-            # mark the token as blacklisted
-            blacklist_token = Blacklist(token=auth_token)
-            try:
-                # insert the token
-                session.add(blacklist_token)
-                session.commit()
-                responseObject = {
-                    'status': 'success',
-                    'message': 'Successfully logged out.'
-                }
-                return (responseObject, 200)
-            except Exception as e:
-                responseObject = {
-                    'status': 'fail',
-                    'message': str(e)
-                }
-                return (responseObject, 200)
-        else:
-            responseObject = {
-                'status': 'fail',
-                'message': resp
-            }
-            return (responseObject, 401)
-    else:
+    auth_token = args[0]
+    # mark the token as blacklisted
+    blacklist_token = Blacklist(token=auth_token)
+    try:
+        # insert the token
+        session.add(blacklist_token)
+        session.commit()
+        responseObject = {
+            'status': 'success',
+            'message': 'Successfully logged out.'
+        }
+        return (responseObject, 200)
+    except Exception as e:
         responseObject = {
             'status': 'fail',
-            'message': 'Provide a valid auth token.'
+            'message': str(e)
         }
-        return (responseObject, 403)
+        return (responseObject, 200)
 
+@token
 def status_task(args, session):
-    auth_header = args[0]
-    secret = args[1]
-    if auth_header:
-        auth_token = auth_header.split(" ")[1]
-    else:
-        auth_token = ''
-    if auth_token:
-        resp, rc = User.decode_auth_token(secret, auth_token, session)
-        if not rc:
-            user = session.query(User).filter_by(nickname=resp).first()
-            responseObject = {
-                'status': 'success',
-                'data': {
-                    'nickname': user.nickname,
-                    'is_admin': user.is_admin,
-                    'registered_on': user.registered_on
-                }
-            }
-            return (responseObject, 200)
-        responseObject = {
-            'status': 'fail',
-            'message': resp
+    resp = args[2]
+    user = session.query(User).filter_by(nickname=resp).first()
+    responseObject = {
+        'status': 'success',
+        'data': {
+            'nickname': user.nickname,
+            'is_admin': user.is_admin,
+            'registered_on': user.registered_on
         }
-        return (responseObject, 401)
-    else:
-        responseObject = {
-            'status': 'fail',
-            'message': 'Provide a valid auth token.'
-        }
-        return (responseObject, 401)
+    }
+    return (responseObject, 200)
+
 
 def login_task(args, session):
     post_data = args[0]
@@ -126,7 +105,6 @@ def signup_task(args, session):
                 nickname=post_data['nickname'],
                 password=post_data['password']
             )
-            # insert the user
             session.add(user)
             session.commit()
             auth_token = user.encode_auth_token(secret, user.nickname)
