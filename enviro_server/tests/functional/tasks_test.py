@@ -6,6 +6,7 @@ import logging
 import pathlib
 from json import load, dumps
 from datetime import datetime
+from enviro_server.database.models import User
 from enviro_server.EnvironmentData import EnvironmentData, EnvironmentValue, Limits
 from enviro_server import create_app
 from enviro_server.tasks import last_entries_task, current_state_task, by_date_task, load_weather_task
@@ -25,7 +26,10 @@ def sqlalchemy_declarative_base():
 def app(mocked_session):
     app = create_app("testing")
     app.config.update({
-        "session": mocked_session
+        "session": mocked_session,
+        "args": ["Bearer " + mocked_session.query(User).first().encode_auth_token("TEST_SECRET",
+                 mocked_session.query(User).first().nickname),
+                 "TEST_SECRET"]
     })
     return app
 
@@ -39,12 +43,15 @@ def sqlalchemy_mock_config():
                                                 "value" : entry["value"], "field_name" : entry["field_name"],
                                                 "unit": entry["unit"]}
                         for entry in dict_data]
-    return [("environment_record", _data)]
+        _users_data = [{"nickname": "testname", "is_admin": False, "registered_on": datetime.now(), "password": "test"}]
+    return [("environment_record", _data), ("users", _users_data)]
 
+
+token_args = []
 # TODO: Add testset with pointer bigger than amount
 last_entries_test_set = ((20, 50), (2, 5))
 
-def test_current_state(redis):
+def test_current_state(app, redis, mocked_session):
     data = EnvironmentData(
             datetime.now(),
             EnvironmentValue(28, Units.TEMPERATURE, Limits["temperature"]),
@@ -57,17 +64,16 @@ def test_current_state(redis):
             EnvironmentValue(80, Units.DUST, Limits["dust"])
     )
     redis.rpush('Data', data.serialize())
-    result = current_state_task(redis)
+    result = current_state_task(app.config["args"] + [redis], mocked_session)
     assert len(result) != 0
     assert len(result) == CHANNELS + 1
     for key in result.keys():
         __test_record(key, result[key], True)
 
-# @pytest.mark.skip(reason="Not working - move to mock")
-def test_by_date(mocked_session):
-    date = last_entries_task([0, 1, ], mocked_session)[0]['datetime']
+def test_by_date(app, mocked_session):
+    date = last_entries_task(app.config["args"] + [0, 1], mocked_session)[0]['datetime']
     assert date is not None
-    result = by_date_task([date, ], mocked_session)
+    result = by_date_task(app.config["args"] + [date], mocked_session)
     assert result is not None
     assert len(result) == CHANNELS + 1
     for key in result:
@@ -77,15 +83,14 @@ def test_by_date(mocked_session):
 def test_update_data_from_sensors():
     raise NotImplementedError
 
-def test_last_entries(mocked_session):
+def test_last_entries(app, mocked_session):
     for test_set in last_entries_test_set:
-        __test_last_entries(test_set[0], test_set[1], mocked_session)
+        __test_last_entries(app, test_set[0], test_set[1], mocked_session)
 
-def test_load_weather(redis): # TODO: Test Redis
+def test_load_weather(app, redis, mocked_session):
     with open(pathlib.Path(__file__).parent.parent.resolve() / "resources" / "weather_data.json") as file:
         mock_weather = file.read()
-        weather = load_weather_task(("55.6961287", "37.5604322", mock_weather), True, redis)[0]
-        print(weather)
+        weather = load_weather_task(app.config["args"] + ["55.6961287", "37.5604322", mock_weather], mocked_session, True, redis)[0]
         assert weather["timezone"] == "Europe/Moscow"
 
 def __test_record(key, value, precise=False):
@@ -111,8 +116,8 @@ def __test_datetime(value, precise=False):
         assert datetime.now().day == time.day
 
 
-def __test_last_entries(pointer, amount, mocked_session):
-    result = last_entries_task([int(pointer), int(amount),], mocked_session)
+def __test_last_entries(app, pointer, amount, mocked_session):
+    result = last_entries_task(app.config["args"] + [int(pointer), int(amount)], mocked_session)
     assert result is not None
     assert len(result) < amount * CHANNELS
     for entry in result:
