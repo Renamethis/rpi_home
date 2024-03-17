@@ -17,11 +17,9 @@ def app(mocked_session):
     })
     return app
 
-
 @pytest.fixture()
 def client(app):
     return app.test_client()
-
 
 @pytest.fixture()
 def runner(app):
