@@ -87,14 +87,12 @@ def test_registered_user_login(client):
             )),
             content_type='application/json',
         )
-        print(resp_register)
         data_register = json.loads(resp_register.data.decode())
         assert data_register['status'] == 'success'
         assert data_register['message'] == 'Successfully registered.'
         assert data_register['auth_token']
         assert resp_register.content_type == 'application/json'
         assert resp_register.status_code, 201
-        # registered user login
         response = client.post(
             '/auth/login',
             data=json.dumps(dict(
@@ -125,3 +123,47 @@ def test_non_registered_user_login(client):
         assert data['message'] == 'Try again'
         assert response.content_type == 'application/json'
         assert response.status_code, 404
+
+def test_valid_logout(client):
+    with client:
+        resp_register = client.post(
+            '/auth/signup',
+            data=json.dumps(dict(
+                nickname='test',
+                password='123456'
+            )),
+            content_type='application/json',
+        )
+        data_register = json.loads(resp_register.data.decode())
+        assert data_register['status'] == 'success'
+        assert data_register['message'] == 'Successfully registered.'
+        assert data_register['auth_token']
+        assert resp_register.content_type == 'application/json'
+        assert resp_register.status_code, 201
+
+        resp_login = client.post(
+            '/auth/login',
+            data=json.dumps(dict(
+                nickname='test',
+                password='123456'
+            )),
+            content_type='application/json'
+        )
+        data_login = json.loads(resp_login.data.decode())
+        assert data_login['status'] == 'success'
+        assert data_login['message'] == 'Successfully logged in.'
+        assert data_login['auth_token']
+        assert resp_login.content_type == 'application/json'
+        assert resp_login.status_code, 200
+        response = client.post(
+            '/auth/logout',
+            headers=dict(
+                Authorization='Bearer ' + json.loads(
+                    resp_login.data.decode()
+                )['auth_token']
+            )
+        )
+        data = json.loads(response.data.decode())
+        assert data['status'] == 'success'
+        assert data['message'] == 'Successfully logged out.'
+        assert response.status_code == 200
