@@ -5,9 +5,10 @@ from enviro_server import app
 if not app.config["TESTING"]:
     from .extensions import celery, db, redis_client
 
+from enviro_server.auth.tasks import token_required
 from celery.signals import worker_ready
 from .EnvironmentData import Units, EnvironmentData
-from .database.models import EnvironmentUnitModel, EnvironmentRecordModel
+from .database.models import EnvironmentUnitModel, EnvironmentRecordModel, User
 from .transform_utils import transform_data, calculate_slices
 from celery.utils.log import get_task_logger
 if not app.config["TESTING"]:
@@ -77,8 +78,9 @@ def by_date(args):
 
 
 @celery.task
-def current_state():
-    current_state_task(redis_client)
+def current_state(args):
+    args.append(redis_client)
+    return current_state_task(args, db.session)
 
 @celery.task
 def last_entries(args):
@@ -88,20 +90,22 @@ def last_entries(args):
 def load_weather(args):
     return load_weather_task(args, False, redis_client)
 
+@token_required
 def last_entries_task(args, session):
     with app.app_context():
         last_entries = session.query(EnvironmentRecordModel) \
             .order_by(EnvironmentRecordModel.ptime.desc())
-        startSlice, endSlice, amount = calculate_slices(args, last_entries.count())
+        startSlice, endSlice, amount = calculate_slices(args[2:], last_entries.count())
         return transform_data(last_entries.slice(startSlice, endSlice), amount)
 
-def load_weather_task(args, testing, client):
-    url = os.getenv("WEATHER_API_URL") + "?lat=" + args[0] + "&lon=" + args[1] + "&appid=" + os.getenv("WEATHER_API_KEY")
+@token_required
+def load_weather_task(args, session, testing, client):
+    url = os.getenv("WEATHER_API_URL") + "?lat=" + args[2] + "&lon=" + args[3] + "&appid=" + os.getenv("WEATHER_API_KEY")
     try:
         if(not testing):
             response = get(url).content
         else:
-            response = args[2]
+            response = args[4]
         client.rpush('Weather', response)
         return loads(response), 200
     except Exception as e:
@@ -109,11 +113,13 @@ def load_weather_task(args, testing, client):
             "Error": str(e)
         }, e.status_code
 
+@token_required
 def by_date_task(args, session):
     with app.app_context():
-        sorted_by_date =  session.query(EnvironmentRecordModel).filter_by(ptime=args[0])
+        sorted_by_date =  session.query(EnvironmentRecordModel).filter_by(ptime=args[2])
         return transform_data(sorted_by_date, 1)[0]
 
-def current_state_task(client):
+@token_required
+def current_state_task(args, session):
     with app.app_context():
-        return EnvironmentData.from_message(client.lrange('Data', -1, -1)[0]).dict
+        return EnvironmentData.from_message(args[2].lrange('Data', -1, -1)[0]).dict
