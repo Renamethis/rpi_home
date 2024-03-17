@@ -93,4 +93,4 @@ class User(db.Model):
                 algorithm='HS256'
             )
         except Exception as e:
-            return e
+            return str(e)

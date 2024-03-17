@@ -4,6 +4,7 @@ GRANT ALL PRIVILEGES ON DATABASE rpi TO root;
 -- DROP TABLE IF EXISTS environment_record;
 -- DROP TABLE IF EXISTS environment_units;
 -- DROP TABLE IF EXISTS users;
+-- DROP TABLE IF EXISTS blacklist;
 
 CREATE TABLE IF NOT EXISTS users(
     nickname varchar(50) not null primary key,
