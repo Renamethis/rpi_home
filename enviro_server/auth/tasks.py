@@ -4,8 +4,8 @@ from enviro_server.database.models import User, Blacklist
 
 auth = Blueprint('auth', __name__)
 
-def token(func):
-    def wrapper(args, session):
+def token_required(func):
+    def wrapper(args, session, *optargs):
         token = args[0]
         secret = args[1]
         if token:
@@ -15,7 +15,7 @@ def token(func):
         resp, rc = User.decode_auth_token(secret, token, session)
         if(not rc and token):
             args.append(resp)
-            return func(args, session)
+            return func(args, session, *optargs)
         return {"status": "token authentication failed", "message": resp}, 401
     return wrapper
 
@@ -35,7 +35,7 @@ def logout(args):
 def status(args):
     return status_task(args, db.session)
 
-@token
+@token_required
 def logout_task(args, session):
     auth_token = args[0]
     # mark the token as blacklisted
@@ -56,7 +56,7 @@ def logout_task(args, session):
         }
         return (responseObject, 200)
 
-@token
+@token_required
 def status_task(args, session):
     resp = args[2]
     user = session.query(User).filter_by(nickname=resp).first()
@@ -88,7 +88,6 @@ def login_task(args, session):
             }
             return (responseObject, 200)
     except Exception as e:
-        print(e)
         responseObject = {
             'status': 'fail',
             'message': 'Try again'
