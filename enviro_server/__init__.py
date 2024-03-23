@@ -18,6 +18,7 @@ def create_app(config_name):
     app.app_config = app_config
     db.init_app(app)
     auth.config = app.config
+    auth.config["SECRET_KEY"] = "Test"
     app.register_blueprint(auth, url_prefix="/auth")
     return app
 

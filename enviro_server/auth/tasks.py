@@ -1,6 +1,8 @@
 from flask import Blueprint
+import datetime
 from enviro_server.extensions import celery, db
 from enviro_server.database.models import User, Blacklist
+from werkzeug.security import check_password_hash
 
 auth = Blueprint('auth', __name__)
 
@@ -71,7 +73,7 @@ def status_task(args, session):
     return (responseObject, 200)
 
 
-def login_task(args, session):
+def login_task(args, session, testing=False):
     post_data = args[0]
     secret = args[1]
     try:
@@ -79,22 +81,32 @@ def login_task(args, session):
         user = session.query(User).filter_by(
             nickname=post_data['nickname']
             ).first()
-        auth_token = user.encode_auth_token(secret, user.nickname)
-        if auth_token:
+        if user and check_password_hash(user.password, post_data.get('password')):
+            if(testing): # TODO: Refactor
+                auth_token = user.encode_auth_token(secret, user.nickname, datetime.timedelta(seconds=1))
+            else:
+                auth_token = user.encode_auth_token(secret, user.nickname)
+            if auth_token:
+                responseObject = {
+                    'status': 'success',
+                    'message': 'Successfully logged in.',
+                    'auth_token': auth_token
+                }
+                return (responseObject, 200)
+        else:
             responseObject = {
-                'status': 'success',
-                'message': 'Successfully logged in.',
-                'auth_token': auth_token
+                'status': 'fail',
+                'message': 'User does not exist.'
             }
-            return (responseObject, 200)
+            return (responseObject, 404)
     except Exception as e:
         responseObject = {
             'status': 'fail',
-            'message': 'Try again'
+            'message': str(e)
         }
         return (responseObject, 500)
 
-def signup_task(args, session):
+def signup_task(args, session, testing=False):
     post_data = args[0]
     secret = args[1]
     user = session.query(User).filter_by(nickname=post_data['nickname']).first()
@@ -106,7 +118,10 @@ def signup_task(args, session):
             )
             session.add(user)
             session.commit()
-            auth_token = user.encode_auth_token(secret, user.nickname)
+            if(testing):
+                auth_token = user.encode_auth_token(secret, user.nickname, datetime.timedelta(seconds=1))
+            else:
+                auth_token = user.encode_auth_token(secret, user.nickname)
             responseObject = {
                 'status': 'success',
                 'message': 'Successfully registered.',
@@ -116,7 +131,7 @@ def signup_task(args, session):
         except Exception as e:
             responseObject = {
                 'status': 'fail',
-                'message': 'Some error occurred. Please try again.'
+                'message': str(e)
             }
             return (responseObject, 1)
     else:
