@@ -102,7 +102,7 @@ def login_task(args, session, testing=False):
     except Exception as e:
         responseObject = {
             'status': 'fail',
-            'message': 'Try again'
+            'message': str(e)
         }
         return (responseObject, 500)
 
@@ -131,7 +131,7 @@ def signup_task(args, session, testing=False):
         except Exception as e:
             responseObject = {
                 'status': 'fail',
-                'message': 'Some error occurred. Please try again.'
+                'message': str(e)
             }
             return (responseObject, 1)
     else:
