@@ -167,3 +167,48 @@ def test_valid_logout(client):
         assert data['status'] == 'success'
         assert data['message'] == 'Successfully logged out.'
         assert response.status_code == 200
+
+def test_invalid_logout(client):
+    with client:
+        resp_register = client.post(
+            '/auth/signup',
+            data=json.dumps(dict(
+                nickname='test',
+                password='123456'
+            )),
+            content_type='application/json',
+        )
+        data_register = json.loads(resp_register.data.decode())
+        assert data_register['status'] == 'success'
+        assert data_register['message'] == 'Successfully registered.'
+        assert data_register['auth_token']
+        assert resp_register.content_type == 'application/json'
+        assert resp_register.status_code == 201
+        resp_login = client.post(
+            '/auth/login',
+            data=json.dumps(dict(
+                nickname='test',
+                password='123456'
+            )),
+            content_type='application/json'
+        )
+        data_login = json.loads(resp_login.data.decode())
+        assert data_login['status'] == 'success'
+        assert data_login['message'] == 'Successfully logged in.'
+        assert data_login['auth_token']
+        assert resp_login.content_type == 'application/json'
+        assert resp_login.status_code == 200
+        token = resp_login.data.decode()
+        sleep(1)
+        response = client.post(
+            '/auth/logout',
+            headers=dict(
+                Authorization='Bearer ' + json.loads(
+                    token
+                )['auth_token']
+            )
+        )
+        data = json.loads(response.data.decode())
+        assert data['status'] == 'token authentication failed'
+        assert data['message'] == 'Signature expired. Please log in again.'
+        assert response.status_code == 401
