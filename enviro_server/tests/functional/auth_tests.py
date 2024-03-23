@@ -120,7 +120,7 @@ def test_non_registered_user_login(client):
         )
         data = json.loads(response.data.decode())
         assert data['status'] == 'fail'
-        assert data['message'] == 'Try again'
+        assert data['message'] == 'User does not exist.'
         assert response.content_type == 'application/json'
         assert response.status_code, 404
 
