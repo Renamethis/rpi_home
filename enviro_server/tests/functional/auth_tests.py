@@ -3,6 +3,7 @@ import pytest
 from enviro_server import create_app
 from enviro_server.database.models import User
 from enviro_server.extensions import db
+from time import sleep
 
 @pytest.fixture(scope="function")
 def sqlalchemy_declarative_base():
@@ -212,3 +213,28 @@ def test_invalid_logout(client):
         assert data['status'] == 'token authentication failed'
         assert data['message'] == 'Signature expired. Please log in again.'
         assert response.status_code == 401
+
+def test_user_status(client):
+    with client:
+        resp_register = client.post(
+            '/auth/signup',
+            data=json.dumps(dict(
+                nickname='test',
+                password='123456'
+            )),
+            content_type='application/json'
+        )
+        response = client.get(
+            '/auth/status',
+            headers=dict(
+                Authorization='Bearer ' + json.loads(
+                    resp_register.data.decode()
+                )['auth_token']
+            )
+        )
+        data = json.loads(response.data.decode())
+        assert data['status'] == 'success'
+        assert data['data'] is not None
+        assert data['data']['nickname'] == 'test'
+        assert data['data']['is_admin'] is 'true' or 'false'
+        assert response.status_code == 200
