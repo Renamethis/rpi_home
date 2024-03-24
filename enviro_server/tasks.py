@@ -45,6 +45,14 @@ def initialize(sender, **k):
                 )
                 db.session.add(new_entry)
             db.session.commit()
+        if(not User.query.filter_by(nickname="WeatherAdmin").first()):
+            weather_admin = User(
+                nickname = "WeatherAdmin",
+                password = os.getenv("ADMIN_PASSWORD"),
+                admin=True
+            )
+            db.session.add(weather_admin)
+            db.session.commit()
 
 
 @celery.task
