@@ -45,12 +45,12 @@ def initialize(sender, **k):
                 )
                 db.session.add(new_entry)
             db.session.commit()
-        if(not User.query.filter_by(nickname="WeatherAdmin").first()):
+        if(not User.query.filter_by(nickname="WeatherAdmin").first()): # TODO: Maybe move to init.sql?
             weather_admin = User(
                 nickname = "WeatherAdmin",
                 password = os.getenv("ADMIN_PASSWORD"),
                 admin=True
-            )
+            ) # TODO: Somehow generate token and sync it with app
             db.session.add(weather_admin)
             db.session.commit()
 

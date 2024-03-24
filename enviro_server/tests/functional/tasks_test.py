@@ -27,8 +27,7 @@ def app(mocked_session):
     app = create_app("testing")
     app.config.update({
         "session": mocked_session,
-        "args": ["Bearer " + mocked_session.query(User).first().encode_auth_token("TEST_SECRET",
-                 mocked_session.query(User).first().nickname),
+        "args": ["Bearer " + mocked_session.query(User).first().encode_auth_token("TEST_SECRET"),
                  "TEST_SECRET"]
     })
     return app
