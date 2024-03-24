@@ -80,14 +80,13 @@ class User(db.Model):
         except jwt.InvalidTokenError:
             return 'Invalid token. Please log in again.', 1
 
-    def encode_auth_token(self, secret, nickname, validity=datetime.timedelta(days=1)):
+    def encode_auth_token(self, secret, validity=datetime.timedelta(days=1)):
         try:
             payload = {
                 'exp': datetime.datetime.utcnow() + validity,
                 'iat': datetime.datetime.utcnow(),
-                'sub': nickname
+                'sub': self.nickname
             }
-            print(payload['exp'])
             return jwt.encode(
                 payload,
                 secret,

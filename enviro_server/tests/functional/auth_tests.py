@@ -33,7 +33,7 @@ def test_decode_auth_token(mocked_session):
     )
     mocked_session.add(user)
     mocked_session.commit()
-    auth_token = user.encode_auth_token("TEST_SECRET", user.nickname)
+    auth_token = user.encode_auth_token("TEST_SECRET")
     assert isinstance(auth_token, str)
     result, _ = User.decode_auth_token("TEST_SECRET", auth_token.encode("utf-8"), mocked_session)
     assert result == 'nickname'
@@ -232,6 +232,7 @@ def test_user_status(client):
                 )['auth_token']
             )
         )
+        print(response)
         data = json.loads(response.data.decode())
         assert data['status'] == 'success'
         assert data['data'] is not None

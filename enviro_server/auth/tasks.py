@@ -83,9 +83,9 @@ def login_task(args, session, testing=False):
             ).first()
         if user and check_password_hash(user.password, post_data.get('password')):
             if(testing): # TODO: Refactor
-                auth_token = user.encode_auth_token(secret, user.nickname, datetime.timedelta(seconds=1))
+                auth_token = user.encode_auth_token(secret, datetime.timedelta(seconds=1))
             else:
-                auth_token = user.encode_auth_token(secret, user.nickname)
+                auth_token = user.encode_auth_token(secret)
             if auth_token:
                 responseObject = {
                     'status': 'success',
@@ -119,9 +119,9 @@ def signup_task(args, session, testing=False):
             session.add(user)
             session.commit()
             if(testing):
-                auth_token = user.encode_auth_token(secret, user.nickname, datetime.timedelta(seconds=1))
+                auth_token = user.encode_auth_token(secret, datetime.timedelta(seconds=1))
             else:
-                auth_token = user.encode_auth_token(secret, user.nickname)
+                auth_token = user.encode_auth_token(secret)
             responseObject = {
                 'status': 'success',
                 'message': 'Successfully registered.',
