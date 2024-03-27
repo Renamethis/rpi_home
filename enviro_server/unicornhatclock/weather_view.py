@@ -97,7 +97,6 @@ class WeatherView:
             hour_str = str(hour).zfill(2)
         minute_str = str(minute).zfill(2)
 
-        # Draw hour digits
         hour_x_offset = 0
         if(not self.__clock_state):
             if not (OMIT_LEADING_ZERO and int(hour_str[0]) == 0):
@@ -106,7 +105,6 @@ class WeatherView:
             self.led.draw_frame(mirror(cache['digits'][int(hour_str[1])]),
                     4 + hour_x_offset, 0, filters)
         else:
-            # # # # Draw minute digits
             self.led.draw_frame(mirror(cache['digits'][int(minute_str[0])]), 0, 0, filters)
             self.led.draw_frame(mirror(cache['digits'][int(minute_str[1])]), 4, 0, filters)
 
@@ -121,7 +119,6 @@ class WeatherView:
             if weather_sprite is None:
                 return
 
-            # Get frame
             ticks = int(time.time() * frame_rate.get(sprite_name, 1))
             frame_index = ticks % len(weather_sprite)
 

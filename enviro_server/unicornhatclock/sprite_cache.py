@@ -3,15 +3,9 @@ from PIL import Image
 
 cache = {}
 
-# Cache sprite from file.
-# Get RGBA values for each frame from left to right, top to bottom.
-# size: (width, height)
-
-
 def import_sprite(path, frame_size, spacing=0, name=None):
 
     with Image.open(path) as img:
-        # img = img.resize((int(img.size[0]*0.8), int(img.size[1]*0.8)), Image.LANCZOS)
         frames = []
         for y in range(0, img.height, frame_size[1] + spacing):
             for x in range(0, img.width, frame_size[0] + spacing):

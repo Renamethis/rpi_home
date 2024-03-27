@@ -38,7 +38,6 @@ class Led:
         for y2 in range(len(frame)):
             for x2 in range(len(frame[y2])):
 
-                # Check for out of bounds
                 xx2, yy2 = x + x2, y + y2
                 if not self.in_bounds(xx2, yy2):
                     continue
@@ -60,7 +59,6 @@ class Led:
                 new_px = [min(max(val, 0), 255) for val in new_px]
 
                 self.buffer[yy2][xx2] = new_px
-                # hat.set_pixel(*map_coords(xx2, yy2), *(new_px))
 
 
     def apply_filters(self, in_rgb, filters):
@@ -110,5 +108,3 @@ class Led:
         self.set_brightness(get_brightness_level(weather))
         draw_func()
         self.show()
-
-        # Calculate how long we have left in the loop to sleep
