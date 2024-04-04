@@ -18,10 +18,9 @@ TIME_MODE = 1
 UNICORN_MODE = 2
 
 class MatrixThread(Thread):
-    def __init__(self, bothSides, redis_client):
+    def __init__(self, lcd_mode, redis_client):
         super().__init__()
         self.rotation = 0
-        self.__bothSides = bothSides
         self.redis_client = redis_client
         self.__init_unicornhat()
         self.font = ImageFont.truetype(str(pathlib.Path().resolve() / "resources/5x7.ttf"), 8)
@@ -31,13 +30,11 @@ class MatrixThread(Thread):
         self.__init_buttons()
         self.__weather_view.setup()
         self.__mode = 0
+        self.__bothSides = False
+        self.__lcd_mode = lcd_mode
 
     def run(self):
-        time_behind = 0
-        time_behind_max = 0.5
-        secs_per_frame = 1 / led_options.get('fps', 10)
         while True:
-            loop_start_time = time.time()
             if(self.__mode == TIME_MODE):
                 self.time_animation()
                 self.unicornhatmini.show()
@@ -99,10 +96,13 @@ class MatrixThread(Thread):
 
     def __button_callback(self, button):
         pin = button.pin.number
-        if(pin == 5):
+        if(pin == BUTTON_A):
             self.__mode = 0 if self.__mode + 1 == MODE_COUNT else self.__mode + 1
             if(self.__mode == WEATHER_MODE):
                 self.__weather_view.setup()
+        elif(pin == BUTTON_B):
+            self.__bothSides = not self.__bothSides
+            # TODO: Reinit matrix
         time.sleep(0.1)
 
     def __init_unicornhat(self):
@@ -113,8 +113,12 @@ class MatrixThread(Thread):
         self.display_width, self.display_height = self.unicornhatmini.get_shape()
         self.__weather_view = WeatherView(self.unicornhatmini, self.display_width, self.display_height, self.redis_client)
 
+    def __off_unicornhatmini(self):
+        self.unicornhatmini.clear()
+        del self.unicornhatmini
+
     def __draw_text(self, text):
-        text_width, text_height = self.font.getsize(text)
+        text_width, _ = self.font.getsize(text)
         image = Image.new('P', (text_width + self.display_width + self.display_width, self.display_height), 0)
         draw = ImageDraw.Draw(image)
         draw.text((self.display_width, -1), text, font=self.font, fill=255)
