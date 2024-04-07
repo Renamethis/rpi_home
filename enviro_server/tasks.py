@@ -96,7 +96,7 @@ def last_entries(args):
 
 @celery.task
 def load_weather(args):
-    return load_weather_task(args, False, redis_client)
+    return load_weather_task(args, db.session, False, redis_client)
 
 @token_required
 def last_entries_task(args, session):
